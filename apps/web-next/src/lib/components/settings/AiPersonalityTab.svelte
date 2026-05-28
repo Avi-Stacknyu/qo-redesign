@@ -161,7 +161,7 @@
 
 		<h3 class="font-Inter text-xl font-medium text-muted-foreground">Response Style</h3>
 
-		<div class="flex flex-col gap-0 rounded-[2rem] bg-white/75 px-6 shadow-sm ring-1 ring-border/40 backdrop-blur-sm">
+		<div class="flex flex-col">
 			{#each selectFields as field (field.key)}
 				<PreferenceSelectRow
 					label={field.label}

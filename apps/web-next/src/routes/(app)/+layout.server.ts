@@ -19,11 +19,18 @@ export async function load() {
 		userId ? getEnabledFeaturesFromWorker(platform, userId) : Promise.resolve([] as string[])
 	]);
 
+	const rawAvatar = locals.user?.image ?? '';
+	const avatarSrc = rawAvatar
+		? rawAvatar.startsWith('http')
+			? rawAvatar
+			: '/api/avatar'
+		: '';
+
 	const user = locals.user
 		? {
 				name: locals.user.name || locals.user.email,
 				email: locals.user.email,
-				avatar: locals.user.image ?? '',
+				avatar: avatarSrc,
 				plan: locals.user.plan
 			}
 		: null;

@@ -23,15 +23,15 @@
 		homeLocation: HomeLocation;
 	} = $props();
 
-	let name = $derived(userName);
+	let name = $state(userName);
 	let isSaving = $state(false);
-	let avatarUrl = $derived(userAvatar);
+	let avatarUrl = $state(userAvatar);
 	let isUploadingAvatar = $state(false);
 	let fileInput: HTMLInputElement | undefined = $state();
 
-	let country = $derived(homeLocation.country);
-	let timezone = $derived(homeLocation.timezone);
-	let city = $derived(homeLocation.city);
+	let country = $state(homeLocation.country);
+	let timezone = $state(homeLocation.timezone);
+	let city = $state(homeLocation.city);
 	let locationSaving = $state(false);
 
 	let timezoneOptions = $derived(country ? getTimezonesForCountry(country) : ALL_TIMEZONES);
@@ -101,7 +101,7 @@
 				throw new Error(err.message ?? 'Upload failed');
 			}
 			const { avatar } = await res.json();
-			avatarUrl = avatar;
+			avatarUrl = `${avatar}?t=${Date.now()}`;
 			toast.success('Avatar updated');
 		} catch (err) {
 			toast.error(err instanceof Error ? err.message : 'Failed to upload avatar');

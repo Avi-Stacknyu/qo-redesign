@@ -1,13 +1,10 @@
 <script lang="ts">
+	import Shell from '$lib/components/Shell.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
-	import * as Avatar from '$lib/components/ui/avatar/index.js';
 	import ToolCard from '$lib/components/tools/ToolCard.svelte';
 	import {
 		Search,
-		Palette,
-		SlidersHorizontal,
-		Bell,
 		ArrowUpDown,
 		ListFilter,
 		FlaskConical,
@@ -47,61 +44,15 @@
 	let browserTools = $derived(filtered);
 </script>
 
-<svelte:head>
-	<title>Analytical Tools</title>
-</svelte:head>
-
-<div class="relative min-h-[calc(100vh-4rem)] w-full">
-	<div class="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+<Shell pageTitle="Analytical Tools" headerVerticalAlign="center">
+	{#snippet header()}
 		<div class="space-y-1">
 			<h1 class="font-Inter text-3xl font-normal tracking-tight text-foreground lg:text-3xl">
 				Analytical Tools
 			</h1>
 			<p class="text-sm text-muted-foreground">{filtered.length} available</p>
 		</div>
-
-		<div class="flex flex-wrap items-center gap-3">
-			<Button
-				class="size-11 rounded-full border border-border/50 bg-white shadow-sm transition-all hover:shadow-md sm:size-12"
-				variant="secondary"
-				onclick={() => (filtersOpen = !filtersOpen)}
-				aria-label="Tool filters"
-			>
-				<SlidersHorizontal class="size-5 text-muted-foreground" />
-			</Button>
-
-			<Button
-				class="size-11 rounded-full border border-border/50 bg-white shadow-sm transition-all hover:shadow-md sm:size-12"
-				variant="secondary"
-				aria-label="Notifications"
-			>
-				<Bell class="size-5 text-muted-foreground" />
-			</Button>
-
-			<Button
-				class="size-11 rounded-full border border-border/50 bg-white shadow-sm transition-all hover:shadow-md sm:size-12"
-				variant="secondary"
-				aria-label="Appearance"
-			>
-				<Palette class="size-5 text-muted-foreground" />
-			</Button>
-
-			<Button
-				class="size-11 rounded-full border border-border/50 bg-white p-0 shadow-sm transition-all hover:shadow-md sm:size-12"
-				variant="secondary"
-				aria-label="Account"
-			>
-				<Avatar.Root class="size-11 sm:size-12">
-					<Avatar.Image
-						class="size-11 rounded-full object-cover sm:size-12"
-						src="https://github.com/shadcn.png"
-						alt="Account"
-					/>
-					<Avatar.Fallback class="size-11 rounded-full sm:size-12">QO</Avatar.Fallback>
-				</Avatar.Root>
-			</Button>
-		</div>
-	</div>
+	{/snippet}
 
 	<div class="mb-10 flex flex-col items-center gap-4">
 		<div class="relative w-full max-w-5xl">
@@ -148,24 +99,24 @@
 
 		{#if filtersOpen}
 			<div class="flex w-full max-w-5xl flex-wrap justify-end gap-2">
-			<Button
-				type="button"
-				variant={selectedCategory === 'all' ? 'default' : 'outline'}
-				class="h-9 rounded-full px-4"
-				onclick={() => (selectedCategory = 'all')}
-			>
-				All
-			</Button>
-			{#each categories as cat (cat)}
 				<Button
 					type="button"
-					variant={selectedCategory === cat ? 'default' : 'outline'}
-					class="h-9 rounded-full bg-white px-4 capitalize"
-					onclick={() => (selectedCategory = selectedCategory === cat ? 'all' : cat)}
+					variant={selectedCategory === 'all' ? 'default' : 'outline'}
+					class="h-9 rounded-full px-4"
+					onclick={() => (selectedCategory = 'all')}
 				>
-					{cat}
+					All
 				</Button>
-			{/each}
+				{#each categories as cat (cat)}
+					<Button
+						type="button"
+						variant={selectedCategory === cat ? 'default' : 'outline'}
+						class="h-9 rounded-full bg-white px-4 capitalize"
+						onclick={() => (selectedCategory = selectedCategory === cat ? 'all' : cat)}
+					>
+						{cat}
+					</Button>
+				{/each}
 			</div>
 		{/if}
 	</div>
@@ -212,5 +163,5 @@
 				</div>
 			</div>
 		{/if}
-		</div>
-</div>
+	</div>
+</Shell>

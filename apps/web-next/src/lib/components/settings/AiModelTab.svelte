@@ -3,7 +3,7 @@
 	import type { SelectOption } from '$lib/components/account/types';
 	import type { AvailableModel } from '$lib/remote/models.remote';
 	import { saveUserModelPreference } from '$lib/remote/models.remote';
-	import { Cpu, Loader2, Sparkles } from '@lucide/svelte';
+	import { Loader2, Sparkles } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
 
 	let {
@@ -22,6 +22,13 @@
 
 	const systemDefault = $derived(models.find((m) => m.is_system_default) ?? null);
 	const selectedModel = $derived(models.find((model) => model.id === selectedId) ?? null);
+	const activeModel = $derived(selectedModel ?? systemDefault);
+	const activeSummary = $derived.by(() => {
+		const model = activeModel;
+		if (!model) return 'Automatically updated by your workspace admin';
+
+		return `${model.provider_name}: ${model.display_name} - automatically updated`;
+	});
 	const modelOptions = $derived<SelectOption[]>([
 		{
 			value: SYSTEM_MODEL_VALUE,
@@ -52,74 +59,43 @@
 
 <section class="flex flex-col gap-6" aria-label="AI Model settings">
 	<div class="flex flex-col gap-1.5">
-		<h2 class="font-Inter text-3xl font-medium text-foreground">AI Model</h2>
-		<p class="text-lg font-light text-muted-foreground">
+		<h2 class="font-Inter text-3xl font-medium text-primary">AI Model</h2>
+		<p class="text-muted-foreground">
 			Choose your default model. Per-chat overrides are available in the chat input.
 		</p>
 	</div>
 
 	<div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-		<div class="flex flex-col gap-1.5">
-			<h3 class="font-Inter text-2xl font-medium text-primary">Default System</h3>
-			<p class="font-light text-muted-foreground">Pick the model used for new conversations.</p>
+		<div class="flex flex-col gap-1">
+			<h3 class="font-Inter text-xl font-medium text-foreground">Default System</h3>
+			<p class="text-sm text-muted-foreground">Pick the model used for new conversations.</p>
 		</div>
 
 		<CustomSelect
 			value={selectedId ?? SYSTEM_MODEL_VALUE}
 			options={modelOptions}
+			class="w-full min-w-0 sm:w-auto sm:min-w-72"
+			contentClass="max-h-[18rem]"
 			onValueChange={(value) => selectModel(value === SYSTEM_MODEL_VALUE ? null : value)}
 		/>
 	</div>
 
-	<div class="grid gap-4 md:grid-cols-[minmax(0,1.5fr)_minmax(18rem,1fr)]">
-		<div class="rounded-[2rem] border border-border/40 bg-card/80 p-6 shadow-sm backdrop-blur-sm">
-			<div class="flex items-center gap-3">
-				<div class="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-					<Cpu class="size-5" />
+	<div class="w-full max-w-xl rounded-[1.5rem] border border-border/40 bg-card/90 px-4 py-3 shadow-sm">
+		<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+			<div class="flex min-w-0 items-start gap-3">
+				<div class="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-lg bg-muted text-primary">
+					<Sparkles class="size-4" />
 				</div>
-				<div>
-					<p class="text-sm font-medium text-muted-foreground">Active Selection</p>
-					<h4 class="font-Inter text-2xl font-medium text-foreground">
-						{selectedModel?.display_name ?? systemDefault?.display_name ?? 'System Default'}
-					</h4>
+				<div class="min-w-0">
+					<h4 class="font-Inter text-base font-medium text-foreground">System Default</h4>
+					<p class="mt-1 text-sm leading-5 text-muted-foreground sm:pr-4">{activeSummary}</p>
 				</div>
 			</div>
 
-			<div class="mt-5 grid gap-3 sm:grid-cols-2">
-				<div class="rounded-[1.5rem] bg-muted/60 p-4">
-					<p class="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">Provider</p>
-					<p class="mt-2 text-base font-medium text-foreground">
-						{selectedModel?.provider_name ?? systemDefault?.provider_name ?? 'Admin configured'}
-					</p>
-				</div>
-				<div class="rounded-[1.5rem] bg-muted/60 p-4">
-					<p class="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">Context Window</p>
-					<p class="mt-2 text-base font-medium text-foreground">
-						{selectedModel?.context_window
-							? `${Math.round(selectedModel.context_window / 1000)}K tokens`
-							: systemDefault?.context_window
-								? `${Math.round(systemDefault.context_window / 1000)}K tokens`
-								: 'Managed automatically'}
-					</p>
-				</div>
-			</div>
-		</div>
-
-		<div class="rounded-[2rem] border border-primary/15 bg-primary/5 p-6">
-			<div class="flex items-center gap-2 text-primary">
-				<Sparkles class="size-4" />
-				<span class="text-sm font-semibold tracking-[0.18em] uppercase">Status</span>
-			</div>
-			<p class="mt-4 text-lg font-medium text-foreground">
-				{selectedId ? 'Custom model selected' : 'Using system default'}
-			</p>
-			<p class="mt-2 text-sm leading-6 text-muted-foreground">
-				Changes save immediately and apply to new chats. Existing chats can still override the model per thread.
-			</p>
 			{#if isSaving}
-				<div class="mt-4 inline-flex items-center gap-2 rounded-full bg-background/80 px-3 py-1.5 text-sm text-muted-foreground">
+				<div class="inline-flex shrink-0 items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-sm text-muted-foreground">
 					<Loader2 class="size-4 animate-spin" />
-					Saving selection...
+					Saving...
 				</div>
 			{/if}
 		</div>

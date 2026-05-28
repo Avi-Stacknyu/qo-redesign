@@ -30,10 +30,10 @@
 {#snippet cardContent()}
 	<div
 		class={cn(
-			'group relative flex h-full w-full items-start gap-4 rounded-2xl border border-white bg-[#F6F6F6] px-6 py-5 text-left transition-all duration-200',
+			'group relative flex h-full w-full items-start gap-4 rounded-2xl border border-[#FFFFFF] bg-[#F6F6F6] px-6 py-5 text-left transition-all duration-200',
 			'hover:-translate-y-0.5 hover:shadow-sm group-focus-visible/card:ring-3 group-focus-visible/card:ring-primary/20',
 			className
-		)}
+		)}	
 	>
 		<div class="flex size-14 shrink-0 items-center justify-center rounded-2xl border border-[#F5D9C5] bg-[#F6F6F6] text-[#904EFF]">
 			{#if typeof Icon === 'string'}
@@ -56,7 +56,7 @@
 				{/if}
 			</div>
 
-			<p class="mt-5 line-clamp-3 text-base leading-relaxed font-normal text-muted-foreground">
+			<p class="mt-5 line-clamp-1 text-base leading-relaxed font-normal text-muted-foreground">
 				{description}
 			</p>
 		</div>

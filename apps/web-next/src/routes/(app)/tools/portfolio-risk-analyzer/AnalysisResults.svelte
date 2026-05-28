@@ -1,6 +1,5 @@
 <!-- AnalysisResults — Portfolio risk analysis output. -->
 <script lang="ts">
-	import * as Card from '$lib/components/ui/card/index.js';
 	import { ChartRenderer } from '@repo/shared/components';
 	import type { ToolExecutionResult, ShadcnChartOutput, ResolvedData } from '@repo/shared/types';
 
@@ -40,15 +39,15 @@
 	{@const pnl = metrics.total_pnl as number}
 	{@const positive = pnl >= 0}
 
-	<div class="grid grid-cols-2 gap-3 sm:grid-cols-4">
-		<Card.Root size="sm" class="rounded-[1.5rem] border-0 bg-white p-4 shadow-[0_8px_30px_rgba(0,0,0,0.04)]">
-			<p class="text-xs font-medium text-[#83899F]">Portfolio Value</p>
-			<p class="mt-1 text-xl font-semibold tracking-tight text-[#1F1F1F] tabular-nums">
+	<div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+		<div class="rounded-2xl border border-border/60 bg-white p-4">
+			<p class="text-xs font-medium text-muted-foreground">Portfolio Value</p>
+			<p class="mt-1 text-xl font-semibold tracking-tight text-foreground tabular-nums">
 				{fmtCur(metrics.total_value)}
 			</p>
-		</Card.Root>
-		<Card.Root size="sm" class="rounded-[1.5rem] border-0 bg-white p-4 shadow-[0_8px_30px_rgba(0,0,0,0.04)]">
-			<p class="text-xs font-medium text-[#83899F]">P&L</p>
+		</div>
+		<div class="rounded-2xl border border-border/60 bg-white p-4">
+			<p class="text-xs font-medium text-muted-foreground">P&L</p>
 			<p
 				class="mt-1 text-xl font-semibold tracking-tight tabular-nums {positive
 					? 'text-emerald-600'
@@ -57,39 +56,33 @@
 				{fmtCur(pnl)}
 				<span class="text-sm font-normal">({fmtPct(metrics.total_pnl_pct)})</span>
 			</p>
-		</Card.Root>
-		<Card.Root size="sm" class="rounded-[1.5rem] border-0 bg-white p-4 shadow-[0_8px_30px_rgba(0,0,0,0.04)]">
-			<p class="text-xs font-medium text-[#83899F]">Diversification</p>
-			<p class="mt-1 text-xl font-semibold tracking-tight text-[#1F1F1F] tabular-nums">
-				{metrics.diversification_score}<span class="text-sm font-normal text-[#83899F]"
-					>/100</span
-				>
+		</div>
+		<div class="rounded-2xl border border-border/60 bg-white p-4">
+			<p class="text-xs font-medium text-muted-foreground">Diversification</p>
+			<p class="mt-1 text-xl font-semibold tracking-tight text-foreground tabular-nums">
+				{metrics.diversification_score}<span class="text-sm font-normal text-muted-foreground">/100</span>
 			</p>
-		</Card.Root>
-		<Card.Root size="sm" class="rounded-[1.5rem] border-0 bg-white p-4 shadow-[0_8px_30px_rgba(0,0,0,0.04)]">
-			<p class="text-xs font-medium text-[#83899F]">Risk Profile</p>
-			<p class="mt-1 text-xl font-semibold tracking-tight text-[#1F1F1F]">{metrics.risk_category}</p>
-		</Card.Root>
+		</div>
+		<div class="rounded-2xl border border-border/60 bg-white p-4">
+			<p class="text-xs font-medium text-muted-foreground">Risk Profile</p>
+			<p class="mt-1 text-xl font-semibold tracking-tight text-foreground">{metrics.risk_category}</p>
+		</div>
 	</div>
 {/if}
 
 {#if pieChartOutput}
-	<Card.Root class="rounded-[2rem] border-0 bg-white py-0 shadow-[0_8px_30px_rgba(0,0,0,0.04)]">
-		<Card.Header class="pb-2">
-			<Card.Title class="text-sm font-medium text-[#1F1F1F]">Asset Allocation</Card.Title>
-		</Card.Header>
-		<Card.Content>
-			<ChartRenderer output={pieChartOutput} />
-		</Card.Content>
-	</Card.Root>
+	<div class="rounded-2xl border border-border/60 bg-white p-5">
+		<h3 class="mb-3 text-sm font-medium text-foreground">Asset Allocation</h3>
+		<ChartRenderer output={pieChartOutput} />
+	</div>
 {/if}
 
 {#if holdingsData?.rows.length}
-	<Card.Root class="rounded-[2rem] border-0 bg-white py-0 shadow-[0_8px_30px_rgba(0,0,0,0.04)]">
-		<Card.Header class="pb-3">
-			<Card.Title class="text-sm font-medium text-[#1F1F1F]">Holdings ({holdingsData.rows.length})</Card.Title>
-		</Card.Header>
-		<Card.Content class="p-0">
+	<div class="rounded-2xl border border-border/60 bg-white">
+		<div class="px-5 pt-5 pb-3">
+			<h3 class="text-sm font-medium text-foreground">Holdings ({holdingsData.rows.length})</h3>
+		</div>
+		<div>
 			<div class="overflow-x-auto">
 				<table class="w-full text-sm">
 					<thead>
@@ -135,19 +128,17 @@
 					</tbody>
 				</table>
 			</div>
-		</Card.Content>
-	</Card.Root>
+		</div>
+	</div>
 {/if}
 
 {#if rebalancingData?.rows.length}
-	<Card.Root class="rounded-[2rem] border-0 bg-white py-0 shadow-[0_8px_30px_rgba(0,0,0,0.04)]">
-		<Card.Header class="pb-3">
-			<Card.Title class="text-sm font-medium text-[#1F1F1F]">Rebalancing Suggestions</Card.Title>
-			<Card.Description class="text-xs"
-				>Adjustments to align with target allocation</Card.Description
-			>
-		</Card.Header>
-		<Card.Content class="p-0">
+	<div class="rounded-2xl border border-border/60 bg-white">
+		<div class="px-5 pt-5 pb-3">
+			<h3 class="text-sm font-medium text-foreground">Rebalancing Suggestions</h3>
+			<p class="text-xs text-muted-foreground">Adjustments to align with target allocation</p>
+		</div>
+		<div>
 			<div class="overflow-x-auto">
 				<table class="w-full text-sm">
 					<thead>
@@ -197,6 +188,6 @@
 					</tbody>
 				</table>
 			</div>
-		</Card.Content>
-	</Card.Root>
+		</div>
+	</div>
 {/if}

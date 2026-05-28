@@ -28,6 +28,6 @@
 	aria-label={`Progress ${clampedValue}%`}
 >
 	<div class="flex items-center justify-center rounded-full bg-white" style={innerStyle}>
-		<span class="text-lg font-semibold text-[#4D5B75]">{label}</span>
+		<span class="text-sm font-semibold text-[#4D5B75]">{label}</span>
 	</div>
 </div>

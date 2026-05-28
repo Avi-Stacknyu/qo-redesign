@@ -35,7 +35,7 @@
 	{#snippet children()}
 		<!-- sidebar transition div -->
 	<div
-		class={`mx-auto flex w-full max-w-336 flex-col gap-8 transition-[margin,padding] duration-300  ${
+		class={`mx-auto flex w-full  flex-col gap-8 transition-[margin,padding] duration-300  ${
 			appLayoutState.sidebarVisible ? 'ml-0' : '-ml-16 sm:-ml-18 lg:-ml-22'
 		}`}
 	>

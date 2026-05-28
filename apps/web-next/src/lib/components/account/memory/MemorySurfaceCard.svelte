@@ -14,7 +14,7 @@
 
 <Card.Root
 	class={cn(
-		'rounded-[28px] border-[#E7EDF7] bg-white shadow-[0_16px_36px_rgba(15,23,42,0.06)]',
+		'rounded-[28px] border-[#E7EDF7] bg-white shadow-[0_16px_36px_rgba(15,23,42,0.06)] py-0',
 		className
 	)}
 >

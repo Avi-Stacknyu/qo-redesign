@@ -67,40 +67,40 @@
 	let validCount = $derived(holdings.filter((h) => h.symbol && h.quantity > 0).length);
 </script>
 
-<Card.Root class="rounded-[2rem] border-0 bg-white py-0 shadow-[0_8px_30px_rgba(0,0,0,0.04)]">
-	<Card.Header class="border-b border-[#F0F0F0] p-5">
-		<Card.Title class="text-xl font-bold text-[#1F1F1F]">Holdings</Card.Title>
-		<Card.Description class="text-[#83899F]">Add your investments to analyze.</Card.Description>
+<Card.Root class="rounded-2xl ring-0 bg-white py-0 shadow-sm">
+	<Card.Header class="border-b border-border/40 p-5">
+		<Card.Title class="text-lg font-medium text-foreground">Holdings</Card.Title>
+		<Card.Description class="text-muted-foreground">Add your investments to analyze.</Card.Description>
 	</Card.Header>
 
 	<Card.Content class="space-y-3 p-5">
 		{#each holdings as holding, i (i)}
-			<div class="space-y-3 rounded-[1.5rem] border border-[#F0F0F0] bg-[#FAFAFA] p-4">
+			<div class="space-y-3 rounded-xl border border-border/40 bg-muted/30 p-4">
 				<div class="grid grid-cols-2 gap-2">
 					<div class="space-y-1">
-						<Label class="text-[11px] font-semibold text-[#83899F]">Symbol</Label>
-						<Input class="h-9 rounded-2xl border-0 bg-white font-mono text-xs uppercase shadow-none" bind:value={holding.symbol} />
+						<Label class="text-[11px] font-medium text-muted-foreground">Symbol</Label>
+						<Input class="h-9 rounded-lg border-border/40 bg-white font-mono text-xs uppercase" bind:value={holding.symbol} />
 					</div>
 					<div class="space-y-1">
-						<Label class="text-[11px] font-semibold text-[#83899F]">Name</Label>
-						<Input class="h-9 rounded-2xl border-0 bg-white text-xs shadow-none" bind:value={holding.name} />
+						<Label class="text-[11px] font-medium text-muted-foreground">Name</Label>
+						<Input class="h-9 rounded-lg border-border/40 bg-white text-xs" bind:value={holding.name} />
 					</div>
 				</div>
 
 				<div class="grid grid-cols-3 gap-2">
 					<div class="space-y-1">
-						<Label class="text-[11px] font-semibold text-[#83899F]">Qty</Label>
+						<Label class="text-[11px] font-medium text-muted-foreground">Qty</Label>
 						<Input
-							class="h-9 rounded-2xl border-0 bg-white text-xs shadow-none tabular-nums"
+							class="h-9 rounded-lg border-border/40 bg-white text-xs tabular-nums"
 							type="number"
 							min="0"
 							bind:value={holding.quantity}
 						/>
 					</div>
 					<div class="space-y-1">
-						<Label class="text-[11px] font-semibold text-[#83899F]">Avg Cost</Label>
+						<Label class="text-[11px] font-medium text-muted-foreground">Avg Cost</Label>
 						<Input
-							class="h-9 rounded-2xl border-0 bg-white text-xs shadow-none tabular-nums"
+							class="h-9 rounded-lg border-border/40 bg-white text-xs tabular-nums"
 							type="number"
 							min="0"
 							step="0.01"
@@ -108,9 +108,9 @@
 						/>
 					</div>
 					<div class="space-y-1">
-						<Label class="text-[11px] font-semibold text-[#83899F]">CMP</Label>
+						<Label class="text-[11px] font-medium text-muted-foreground">CMP</Label>
 						<Input
-							class="h-9 rounded-2xl border-0 bg-white text-xs shadow-none tabular-nums"
+							class="h-9 rounded-lg border-border/40 bg-white text-xs tabular-nums"
 							type="number"
 							min="0"
 							step="0.01"
@@ -121,13 +121,13 @@
 
 				<div class="flex items-end gap-2">
 					<div class="min-w-0 flex-1 space-y-1">
-						<Label class="text-[11px] font-semibold text-[#83899F]">Class</Label>
+						<Label class="text-[11px] font-medium text-muted-foreground">Class</Label>
 						<Select.Root
 							type="single"
 							value={holding.asset_class}
 							onValueChange={(v) => (holding.asset_class = v)}
 						>
-							<Select.Trigger class="h-9 w-full rounded-2xl border-0 bg-white text-xs shadow-none">
+							<Select.Trigger class="h-9 w-full rounded-lg border-border/40 bg-white text-xs">
 								{CLASSES.find((c) => c.value === holding.asset_class)?.label ?? 'Select'}
 							</Select.Trigger>
 							<Select.Content>
@@ -140,7 +140,7 @@
 					<Button
 						variant="ghost"
 						size="sm"
-						class="h-9 rounded-full px-3 text-xs text-[#83899F] hover:text-destructive"
+						class="h-9 rounded-lg px-3 text-xs text-muted-foreground hover:text-destructive"
 						disabled={holdings.length <= 1}
 						onclick={() => removeRow(i)}
 					>
@@ -151,18 +151,18 @@
 		{/each}
 
 		<button
-			class="w-full rounded-full border-2 border-dashed border-[#D8D8D8] py-2.5 text-sm font-medium text-[#83899F] transition-colors hover:border-[#1F1F1F] hover:text-[#1F1F1F]"
+			class="w-full rounded-xl border border-dashed border-border py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:border-foreground hover:text-foreground"
 			onclick={addRow}
 		>
 			+ Add holding
 		</button>
 	</Card.Content>
 
-	<div class="space-y-3 border-t border-[#F0F0F0] p-5 pt-4">
-		<label class="flex cursor-pointer items-center gap-2 text-xs font-medium text-[#83899F]">
+	<div class="space-y-3 border-t border-border/40 p-5 pt-4">
+		<label class="flex cursor-pointer items-center gap-2 text-xs font-medium text-muted-foreground">
 			<input
 				type="checkbox"
-				class="size-3.5 rounded border accent-[#1F1F1F]"
+				class="size-3.5 rounded border accent-foreground"
 				bind:checked={showAllocation}
 			/>
 			Include target allocation
@@ -172,9 +172,9 @@
 			<div class="grid grid-cols-3 gap-2">
 				{#each Object.entries(allocation) as [key, val] (key)}
 					<div class="space-y-1">
-						<Label class="text-[11px] font-semibold text-[#83899F] capitalize">{key} %</Label>
+						<Label class="text-[11px] font-medium text-muted-foreground capitalize">{key} %</Label>
 						<Input
-							class="h-9 rounded-2xl border-0 bg-[#F6F6F6] text-xs shadow-none tabular-nums"
+							class="h-9 rounded-lg border-border/40 bg-muted/30 text-xs tabular-nums"
 							type="number"
 							min="0"
 							max="100"
@@ -186,7 +186,11 @@
 			</div>
 		{/if}
 
-		<Button class="h-12 w-full rounded-full bg-[#1F1F1F] text-base font-semibold text-white shadow-none hover:bg-[#2A2A2A]" onclick={handleSubmit} disabled={running || validCount === 0}>
+		<Button
+			class="h-12 w-full rounded-full text-base font-medium"
+			onclick={handleSubmit}
+			disabled={running || validCount === 0}
+		>
 			{#if running}
 				<Loader2 class="mr-2 size-4 animate-spin" />
 				Analyzing…
