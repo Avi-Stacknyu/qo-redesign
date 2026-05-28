@@ -371,19 +371,27 @@ export const ensureDefaultProfile = query(async () => {
     .returning();
 
   const defaultWidgets = [
-    { widget_type: 'todo', widget_title: 'Todo List', position: { order: 0, size: 'sm' } },
-    { widget_type: 'news', widget_title: 'News Feed', position: { order: 1, size: 'sm' } },
-    { widget_type: 'reminders', widget_title: 'Reminders', position: { order: 2, size: 'sm' } },
-    {
-      widget_type: 'recent-chats',
-      widget_title: 'Recent Chats',
-      position: { order: 3, size: 'sm' }
-    },
+    { widget_type: 'todo', widget_title: 'Todo List', position: { order: 0, size: 'md' } },
+    { widget_type: 'calendar', widget_title: 'Calendar', position: { order: 1, size: 'sm' } },
+    { widget_type: 'reminders', widget_title: 'Reminders', position: { order: 2, size: 'md' } },
     {
       widget_type: 'quick-actions',
       widget_title: 'Quick Actions',
-      position: { order: 4, size: 'sm' }
-    }
+      position: { order: 3, size: 'md' }
+    },
+    {
+      widget_type: 'profile-summary',
+      widget_title: 'Profile Summary',
+      position: { order: 4, size: 'md' }
+    },
+    { widget_type: 'news', widget_title: 'News Feed', position: { order: 5, size: 'md' } },
+    { widget_type: 'note', widget_title: 'Quick Notes', position: { order: 6, size: 'lg' } },
+    {
+      widget_type: 'bank-accounts',
+      widget_title: 'Bank Accounts',
+      position: { order: 7, size: 'md' }
+    },
+    { widget_type: 'big-news', widget_title: 'Top Stories', position: { order: 8, size: 'lg' } }
   ];
 
   await db.insert(userWidgetInstances).values(

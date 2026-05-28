@@ -3,6 +3,7 @@
   import { page } from '$app/stores';
 
   import AgentAvatar from '$lib/components/AgentAvatar.svelte';
+  import ChatModeSidebar from '$lib/components/chat/sidebar/ChatModeSidebar.svelte';
 
   import * as Avatar from '$lib/components/ui/avatar/index.js';
   import * as Card from '$lib/components/ui/card/index.js';
@@ -31,7 +32,8 @@
     agents = [] as Agent[],
     features = [] as string[],
     user = null as SidebarUser,
-    visible = $bindable(true)
+    visible = $bindable(true),
+    mode = 'default' as 'default' | 'chat'
   } = $props();
 
   const showFeature = (feature: string) => features.length === 0 || features.includes(feature);
@@ -90,6 +92,9 @@
 </script>
 
 <Tooltip.Provider delayDuration={150}>
+  {#if mode === 'chat'}
+    <ChatModeSidebar bind:visible />
+  {:else}
   <main
     class={cn(
       'fixed top-[12.5%] left-4 z-30 flex w-fit flex-col gap-20 transition-all duration-300',
@@ -256,4 +261,5 @@
       </Card.Content>
     </Card.Root>
   </main>
+  {/if}
 </Tooltip.Provider>

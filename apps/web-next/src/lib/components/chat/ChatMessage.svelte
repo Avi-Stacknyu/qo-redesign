@@ -104,22 +104,22 @@
 </script>
 
 {#if role === 'user' || hasContent || hasGenerativeUIParts}
-	<div class="w-full px-2 py-1.5 md:px-4 md:py-2">
+	<div class="w-full px-3 py-2 md:px-5">
 		<div class="mx-auto max-w-4xl">
-			<div class={cn('flex gap-2 md:gap-3', role === 'user' ? 'flex-row-reverse' : 'flex-row')}>
+			<div class={cn('flex items-end gap-3', role === 'user' ? 'flex-row-reverse' : 'flex-row')}>
 				{#if role === 'assistant' && agent}
 					<AgentAvatar {agent} size="chat" />
 				{:else}
 					<div
 						class={cn(
-							'flex size-6 shrink-0 items-center justify-center rounded-full md:size-8',
-							role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'
+							'flex size-9 shrink-0 items-center justify-center rounded-full',
+							role === 'user' ? 'bg-[#7c4dff] text-white' : 'bg-[#7c4dff] text-white'
 						)}
 					>
 						{#if role === 'user'}
-							<User class="size-3 md:size-4" />
+							<User class="size-4" />
 						{:else}
-							<QIcon class="size-4 md:size-5" />
+							<QIcon class="size-4" />
 						{/if}
 					</div>
 				{/if}
@@ -128,8 +128,8 @@
 					class={cn(
 						'group relative flex flex-col gap-1',
 						role === 'user'
-							? 'max-w-[85%] items-end md:max-w-[75%]'
-							: 'max-w-[90%] items-start md:max-w-[85%]',
+							? 'max-w-[82%] items-end md:max-w-[76%]'
+							: 'max-w-[90%] items-start md:max-w-[82%]',
 						role === 'assistant' && hasGenerativeUIParts && 'w-full sm:w-auto sm:min-w-md'
 					)}
 				>
@@ -140,7 +140,7 @@
 						>
 							{#each files as file}
 								<div
-									class="inline-flex items-center gap-2 rounded-lg border bg-background px-3 py-1.5 text-sm"
+									class="inline-flex items-center gap-2 rounded-xl border border-[#e8edf4] bg-white px-3 py-1.5 text-sm text-slate-500"
 								>
 									<Paperclip class="h-3.5 w-3.5 text-muted-foreground" />
 									<span class="max-w-32 truncate">{file.name}</span>
@@ -161,10 +161,10 @@
 						<div
 							bind:this={bubbleEl}
 							class={cn(
-								'relative rounded-2xl px-3 py-2 md:px-4 md:py-2.5',
+								'relative border px-4 py-3 text-[14px] shadow-sm md:px-4 md:py-3 md:text-[15px]',
 								role === 'user'
-									? 'rounded-br-md bg-primary text-primary-foreground'
-									: 'rounded-bl-md border border-border/60 bg-muted text-foreground shadow-sm'
+									? 'rounded-[22px_6px_22px_22px] border-[#7c4dff] bg-[#7c4dff] text-white shadow-none'
+									: 'rounded-[6px_22px_22px_22px] border-[#eef2f6] bg-white text-[#344054]'
 							)}
 							onmouseup={handleMouseUp}
 							onmousedown={handleMouseDown}
@@ -174,12 +174,18 @@
 								class={cn(
 									'prose max-w-none text-[13px] leading-relaxed md:prose-sm md:text-sm [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&>p]:m-0 [&>p]:leading-relaxed',
 									role === 'user'
-										? '**:text-primary-foreground prose-a:underline'
-										: 'prose-a:font-medium prose-code:rounded prose-code:bg-background/80 prose-code:px-1 prose-code:py-0.5 prose-code:before:content-none prose-code:after:content-none prose-pre:bg-background prose-hr:hidden'
+										? '**:text-white prose-a:text-white prose-a:underline prose-strong:text-white prose-code:bg-white/15 prose-code:text-white prose-code:before:content-none prose-code:after:content-none'
+										: 'prose-a:font-medium prose-a:text-[#5b48f5] prose-code:rounded prose-code:bg-slate-100 prose-code:px-1 prose-code:py-0.5 prose-code:before:content-none prose-code:after:content-none prose-pre:bg-slate-100 prose-hr:hidden prose-strong:text-[#25324b]'
 								)}
 							>
 								{@html renderedContent}
 							</div>
+
+							{#if timestamp}
+								<p class={cn('mt-2 text-[10px] font-medium', role === 'user' ? 'text-white/60' : 'text-[#98a2b3]')}>
+									{timestamp}
+								</p>
+							{/if}
 
 							{#if selectionPopup}
 								<button
@@ -199,12 +205,12 @@
 
 					{#if role === 'assistant' && onSaveAsNote && hasContent}
 						<div
-							class="flex items-center gap-1 pt-0.5 opacity-0 transition-opacity group-hover:opacity-100"
+							class="flex items-center gap-1 pt-1 opacity-0 transition-opacity group-hover:opacity-100"
 							class:opacity-100={isSaved || isSaving}
 						>
 							{#if isSaved}
 								<span
-									class="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-primary"
+									class="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-[#5b48f5]"
 								>
 									<BookmarkCheck class="h-3 w-3" /> Saved
 								</span>

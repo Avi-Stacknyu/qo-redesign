@@ -4,10 +4,10 @@
 	import { untrack } from 'svelte';
 	import { getThreadList } from '$lib/remote/chat-threads.remote';
 	import ChatNavActions from '$lib/components/chat/sidebar/ChatNavActions.svelte';
-	import ChatSidebar from '$lib/components/chat/sidebar/ChatSidebar.svelte';
-	import * as Sidebar from '$lib/components/shadcn/sidebar/index.js';
+	import MainSidebar from '$lib/main-sidebar.svelte';
+	import { cn } from '$lib/utils';
 
-	let { children } = $props();
+	let { children, data } = $props();
 
 	let sidebarOpen = $state(true);
 	let currentThreadId = $state<string | null>(null);
@@ -41,23 +41,22 @@
 	<div class="absolute inset-x-0 top-0 h-36 bg-white/55 blur-3xl"></div>
 </div>
 
-<Sidebar.Provider bind:open={sidebarOpen}>
-	<ChatSidebar />
-	<Sidebar.Inset class="min-w-0 bg-transparent">
-		<header
-			class="absolute top-0 right-0 left-0 z-20 flex h-14 shrink-0 items-center justify-between border-transparent bg-transparent"
-		>
+<MainSidebar mode="chat" features={data.features} user={$page.data.user} bind:visible={sidebarOpen} />
+
+<div
+	class={cn(
+		'chat-shell flex h-screen flex-col overflow-hidden bg-transparent transition-[padding-left] duration-300',
+		sidebarOpen ? 'pl-20 sm:pl-24 lg:pl-28' : 'pl-4'
+	)}
+>
+	<header
+		class="absolute top-0 right-0 left-0 z-20 flex h-14 shrink-0 items-center justify-end border-transparent bg-transparent"
+	>
+		{#if $page.url.pathname !== '/chat'}
 			<div class="flex items-center gap-2 px-3">
-				<Sidebar.Trigger class="ml-1 text-muted-foreground hover:text-foreground md:hidden" />
+				<ChatNavActions threadId={currentThreadId} favorite={isFavorite} />
 			</div>
-			{#if $page.url.pathname !== '/chat'}
-				<div class="flex items-center gap-2 px-3">
-					<ChatNavActions threadId={currentThreadId} favorite={isFavorite} />
-				</div>
-			{/if}
-		</header>
-		<div class="chat-shell flex h-screen flex-col overflow-hidden" class:sidebarOpen={'md:pl-64'}>
-			{@render children()}
-		</div>
-	</Sidebar.Inset>
-</Sidebar.Provider>
+		{/if}
+	</header>
+	{@render children()}
+</div>

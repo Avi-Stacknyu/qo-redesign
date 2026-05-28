@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Sparkles } from '@lucide/svelte';
+	import { Button } from '$lib/components/ui/button/index.js';
 	import WidgetCard from './WidgetCard.svelte';
 	import {
 		type UserWidgetInstanceRecord,
@@ -14,17 +15,19 @@
 		type ProfileSummaryConfig,
 		type KnowledgeConfig
 	} from '$lib/types/widgets';
+	import Calendar from './widget/Calendar.svelte';
+	import QuickActions from './widget/QuickActions.svelte';
+	import ProfileSummary from './widget/ProfileSummary.svelte';
+	import News from './widget/News.svelte';
+	import BigNews from './widget/BigNews.svelte';
+	import Todo from './widget/Todo.svelte';
+	import Reminder from './widget/Reminder.svelte';
+	import Note from './widget/ NoteSplit.svelte';
+	import PlaidWidget from './widget/PlaidWidget.svelte';
 	import ChartWidget from './widgets/ChartWidget.svelte';
-	import TodoWidget from './widgets/TodoWidget.svelte';
-	import NewsWidget from './widgets/NewsWidget.svelte';
-	import RemindersWidget from './widgets/RemindersWidget.svelte';
-	import QuickActionsWidget from './widgets/QuickActionsWidget.svelte';
 	import RecentChatsWidget from './widgets/RecentChatsWidget.svelte';
-	import CalendarWidget from './widgets/CalendarWidget.svelte';
 	import BookmarksWidget from './widgets/BookmarksWidget.svelte';
-	import ProfileSummaryWidget from './widgets/ProfileSummaryWidget.svelte';
 	import KnowledgeWidget from './widgets/KnowledgeWidget.svelte';
-	import PlaidWidget from './widgets/PlaidWidget.svelte';
 
 	let {
 		widgets,
@@ -41,6 +44,59 @@
 	} = $props();
 
 	let sortedWidgets = $derived([...widgets].sort((a, b) => a.position.order - b.position.order));
+	let todoShowInput = $state(false);
+	let bigNewsFilter = $state('Markets');
+	const bigNewsFilters = ['Markets', 'Tech', 'Policy'];
+
+	function headerConfig(widget: UserWidgetInstanceRecord): Record<string, unknown> {
+		switch (widget.widget_type) {
+			case 'calendar':
+				return {
+					showHeader: false
+				};
+			case 'quick-actions':
+				return {
+					widget_title: widget.widget_title || 'Quick Actions',
+					showAddButton: false
+				};
+			case 'todo':
+				return {
+					widget_title: widget.widget_title || 'Todos',
+					showAddButton: true,
+					onAdd: () => (todoShowInput = !todoShowInput)
+				};
+			case 'reminder':
+			case 'reminders':
+				return {
+					widget_title: widget.widget_title || 'Reminders',
+					showAddButton: false
+				};
+			case 'profile-summary':
+				return {
+					widget_title: widget.widget_title || 'Profile Summary',
+					showAddButton: false
+				};
+			case 'news':
+				return {
+					widget_title: widget.widget_title || 'News',
+					showAddButton: false
+				};
+			case 'big-news':
+				return {
+					widget_title: widget.widget_title || 'News',
+					showAddButton: false
+				};
+			case 'note':
+				return {
+					showHeader: false
+				};
+			default:
+				return {
+					widget_title: widget.widget_title || widget.widget_type || 'Widget',
+					showAddButton: false
+				};
+		}
+	}
 
 	// ── Masonry action ──────────────────────────────────────────────────────────
 	// CSS Grid with micro-rows (2px each, no row-gap). Each item measures its
@@ -184,7 +240,9 @@
 	>
 		{#each sortedWidgets as widget (widget.id)}
 			<div
-				class="{colSpan(widget.position.size)} self-start transition-opacity duration-200
+				class="{widget.widget_type === 'note'
+					? 'col-span-1 md:col-span-2 lg:col-span-3 xl:col-span-4 2xl:col-span-5'
+					: colSpan(widget.position.size)} self-start transition-opacity duration-200
 					{draggedId === widget.id ? 'opacity-50' : ''}
 					{dragOverId === widget.id ? 'rounded-xl ring-2 ring-primary ring-offset-2' : ''}"
 				use:masonryItem
@@ -196,41 +254,91 @@
 				ondragend={handleDragEnd}
 				role={editMode ? 'listitem' : undefined}
 			>
-				<WidgetCard instance={widget} {editMode} {onRemove} {onUpdate}>
-					{#snippet children()}
-						{@const cfg = widget.custom_config}
-						{#if widget.widget_type === 'chart'}
-							<ChartWidget config={cfg as ChartConfig} />
-						{:else if widget.widget_type === 'todo'}
-							<TodoWidget config={cfg as TodoConfig} />
-						{:else if widget.widget_type === 'news'}
-							<NewsWidget config={cfg as NewsConfig} />
-						{:else if widget.widget_type === 'reminders'}
-							<RemindersWidget config={cfg as RemindersConfig} />
-						{:else if widget.widget_type === 'quick-actions'}
-							<QuickActionsWidget config={cfg as QuickActionsConfig} />
-						{:else if widget.widget_type === 'recent-chats'}
-							<RecentChatsWidget config={cfg as RecentChatsConfig} />
-						{:else if widget.widget_type === 'calendar'}
-							<CalendarWidget />
-						{:else if widget.widget_type === 'bookmarks'}
-							<BookmarksWidget config={cfg as BookmarksConfig} />
-						{:else if widget.widget_type === 'profile-summary'}
-							<ProfileSummaryWidget config={cfg as ProfileSummaryConfig} />
-						{:else if widget.widget_type === 'knowledge'}
-							<KnowledgeWidget config={cfg as KnowledgeConfig} />
-						{:else if widget.widget_type === 'bank-accounts'}
-							<PlaidWidget />
-						{:else}
-							<div class="flex min-h-40 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border/60 bg-muted/30 p-6 text-center">
-								<p class="text-sm font-medium text-foreground">Unsupported widget</p>
-								<p class="text-xs leading-5 text-muted-foreground">
-									{widget.widget_type || 'Unknown'} is in this layout, but no renderer is registered yet.
-								</p>
+				{#if widget.widget_type === 'note'}
+					<Note
+						showDate={false}
+						showCategory={false}
+						notes={[
+							{
+								id: 1,
+								title: 'Quick Reminder',
+								description: 'Push latest changes before shipping the new dashboard shell.'
+							}
+						]}
+					/>
+				{:else if widget.widget_type === 'big-news'}
+					<WidgetCard
+						instance={{ ...widget, ...headerConfig(widget) }}
+						{editMode}
+						{onRemove}
+						{onUpdate}
+						showHeader={true}
+					>
+						{#snippet headerRight()}
+							<div class="flex items-center gap-1.5">
+								{#each bigNewsFilters as filter}
+									<Button
+										variant="ghost"
+										size="sm"
+										onclick={() => (bigNewsFilter = filter)}
+										class={
+											bigNewsFilter === filter
+												? 'rounded-full bg-[#111A2E] px-4 text-xs font-semibold text-white hover:bg-[#0A1120]'
+												: 'rounded-full bg-[#F3F6FB] px-4 text-xs font-semibold text-[#7B8794] hover:bg-[#E7EDF7] hover:text-[#25324B]'
+										}
+									>
+										{filter}
+									</Button>
+								{/each}
 							</div>
-						{/if}
-					{/snippet}
-				</WidgetCard>
+						{/snippet}
+						{#snippet children()}
+							<BigNews config={widget.custom_config ?? {}} bind:activeFilter={bigNewsFilter} />
+						{/snippet}
+					</WidgetCard>
+				{:else}
+					<WidgetCard
+						instance={{ ...widget, ...headerConfig(widget) }}
+						{editMode}
+						{onRemove}
+						{onUpdate}
+						showHeader={widget.widget_type !== 'calendar'}
+					>
+						{#snippet children()}
+							{@const cfg = widget.custom_config}
+							{#if widget.widget_type === 'calendar'}
+								<Calendar />
+							{:else if widget.widget_type === 'quick-actions'}
+								<QuickActions config={cfg as QuickActionsConfig} />
+							{:else if widget.widget_type === 'todo'}
+								<Todo config={cfg as TodoConfig} bind:showInput={todoShowInput} />
+							{:else if widget.widget_type === 'reminder' || widget.widget_type === 'reminders'}
+								<Reminder config={cfg as RemindersConfig} />
+							{:else if widget.widget_type === 'profile-summary'}
+								<ProfileSummary config={cfg as ProfileSummaryConfig} />
+							{:else if widget.widget_type === 'news'}
+								<News config={cfg as NewsConfig} />
+							{:else if widget.widget_type === 'bank-accounts' || widget.widget_type === 'plaid'}
+								<PlaidWidget />
+							{:else if widget.widget_type === 'chart'}
+								<ChartWidget config={cfg as ChartConfig} />
+							{:else if widget.widget_type === 'recent-chats'}
+								<RecentChatsWidget config={cfg as RecentChatsConfig} />
+							{:else if widget.widget_type === 'bookmarks'}
+								<BookmarksWidget config={cfg as BookmarksConfig} />
+							{:else if widget.widget_type === 'knowledge'}
+								<KnowledgeWidget config={cfg as KnowledgeConfig} />
+							{:else}
+								<div class="flex min-h-40 flex-col items-center justify-center gap-2 rounded-[24px] border border-dashed border-[#D7DCE5] bg-[#F8FBFF] p-6 text-center">
+									<p class="text-sm font-medium text-[#25324B]">Unsupported widget</p>
+									<p class="text-xs leading-5 text-[#7B8794]">
+										{widget.widget_type || 'Unknown'} is in this layout, but no renderer is registered yet.
+									</p>
+								</div>
+							{/if}
+						{/snippet}
+					</WidgetCard>
+				{/if}
 			</div>
 		{/each}
 	</div>

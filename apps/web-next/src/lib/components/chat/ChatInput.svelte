@@ -8,6 +8,7 @@
 		CheckCircle,
 		Loader2,
 		Paperclip,
+		Search,
 		Send,
 		X
 	} from '@lucide/svelte';
@@ -48,7 +49,8 @@
 		allowedModelIds = null,
 		pinnedModelInfo = null,
 		creditBalance = null,
-		hasSubscription = false
+		hasSubscription = false,
+		floating = true
 	}: {
 		onSubmit: (message: string, files?: ChatFileAttachment[]) => void;
 		disabled?: boolean;
@@ -69,6 +71,7 @@
 		/** When non-null, enables credit gate display. */
 		creditBalance?: number | null;
 		hasSubscription?: boolean;
+		floating?: boolean;
 	} = $props();
 
 	const creditsBlocked = $derived(creditBalance !== null && creditBalance <= 0);
@@ -300,9 +303,13 @@
 </script>
 
 <div
-	class="pointer-events-none absolute right-0 bottom-3 left-0 z-50 flex w-full justify-center px-3 md:bottom-6 md:px-4"
+	class={cn(
+		floating
+			? 'pointer-events-none absolute right-0 bottom-3 left-0 z-50 flex w-full justify-center px-3 md:bottom-6 md:px-4'
+			: 'relative flex w-full justify-center'
+	)}
 >
-	<div class="pointer-events-auto flex w-full max-w-3xl flex-col gap-3">
+	<div class={cn('pointer-events-auto flex w-full flex-col gap-3', floating ? 'max-w-3xl' : 'max-w-none')}>
 		<!-- Credit Gate -->
 		{#if creditsBlocked}
 			<CreditGate creditBalance={creditBalance!} {hasSubscription} />
@@ -340,125 +347,137 @@
 			</div>
 		{/if}
 
-		<!-- Floating Capsule Input -->
 		<div
-			class={cn(
-				'relative flex flex-col gap-0 rounded-[26px] border bg-background/80 shadow-2xl ring-1 ring-border/10 backdrop-blur-xl transition-all duration-300',
-				isFocused
-					? 'border-primary/30 shadow-[0_8px_40px_-12px_rgba(0,0,0,0.2)] ring-4 ring-primary/5'
-					: 'border-border/60 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.1)]'
-			)}
+			class="rounded-[28px] p-px"
+			style="background: linear-gradient(90deg, rgba(162, 89, 255, 0.52) 0%, rgba(104, 117, 253, 0.44) 50%, rgba(255, 89, 180, 0.28) 100%); box-shadow: 0px 4px 40px 0px rgba(221, 194, 255, 0.72), 0px 4px 40px 0px rgba(227, 240, 255, 0.68), 0px 4px 40px 0px rgba(255, 89, 180, 0.18);"
 		>
-			<textarea
-				bind:this={textarea}
-				bind:value={message}
-				use:autoResize
-				onkeydown={handleKeydown}
-				onfocus={() => (isFocused = true)}
-				onblur={() => (isFocused = false)}
-				{placeholder}
-				disabled={disabled || isStreaming}
-				class="min-h-13 w-full resize-none bg-transparent px-4 pt-3.5 pb-2 text-sm leading-relaxed outline-none placeholder:text-muted-foreground/50 disabled:opacity-50 md:px-5 md:pt-4 md:text-[15px]"
-				rows="1"
-			></textarea>
+			<div
+				class={cn(
+					'relative flex flex-col gap-0 rounded-[27px] bg-white/96 backdrop-blur-xl transition-all duration-300',
+					isFocused
+						? 'shadow-[0_14px_34px_-18px_rgba(124,77,255,0.38)]'
+						: 'shadow-[0_12px_28px_-18px_rgba(15,23,42,0.18)]'
+				)}
+			>
+				<div class="flex items-start gap-3 px-4 pt-4 md:px-5 md:pt-5">
+					<Search class="mt-3 size-5 shrink-0 text-slate-400" />
+					<textarea
+						bind:this={textarea}
+						bind:value={message}
+						use:autoResize
+						onkeydown={handleKeydown}
+						onfocus={() => (isFocused = true)}
+						onblur={() => (isFocused = false)}
+						{placeholder}
+						disabled={disabled || isStreaming}
+						class="min-h-13 flex-1 resize-none bg-transparent px-0 pt-2 pb-2 text-sm leading-relaxed text-slate-700 outline-none placeholder:text-slate-400 disabled:opacity-50 md:text-[15px]"
+						rows="1"
+					></textarea>
 
-			<!-- Input Toolbar -->
-			<div class="flex items-center justify-between px-2 pb-2">
-				<div class="flex items-center gap-0.5">
-					<!-- Attachment -->
-					<Tooltip.Root>
-						<Tooltip.Trigger>
-							{#snippet child({ props })}
-								<Button
-									{...props}
-									variant="ghost"
-									size="icon"
-									class="size-9 rounded-full text-muted-foreground/70 hover:bg-muted hover:text-foreground"
-									onclick={() => fileInput?.click()}
-									disabled={disabled || isStreaming}
-								>
-									<Paperclip class="size-4" />
-								</Button>
-							{/snippet}
-						</Tooltip.Trigger>
-						<Tooltip.Content side="top">Attach file</Tooltip.Content>
-					</Tooltip.Root>
-					<input
-						bind:this={fileInput}
-						type="file"
-						multiple
-						class="hidden"
-						onchange={handleFileSelect}
-						accept={SUPPORTED_FILE_EXTENSIONS.join(',')}
-					/>
-
-					<!-- Voice Input -->
-					<VoiceRecorder
-						{threadId}
-						{disabled}
-						{isStreaming}
-						onTranscription={handleTranscription}
-					/>
-
-					{#if !hideAgentSelector}
-						<div class="mx-1.5 h-4 w-px bg-border/40"></div>
-						<AgentSelector
-							{agents}
-							{selectedAgentId}
-							onSelectAgent={(id: string) => onAgentChange?.(id)}
-						/>
-					{/if}
-
-					{#if availableModels.length > 0 || pinnedModelInfo}
-						<div class="mx-1 h-4 w-px bg-border/40"></div>
-						<ModelPicker
-							models={availableModels}
-							{selectedModelId}
-							onModelChange={(id) => onModelChange?.(id)}
-							{allowedModelIds}
-							{pinnedModelInfo}
-						/>
-					{/if}
+					<div class="pt-1">
+						{#if isStreaming}
+							<Button
+								variant="secondary"
+								size="icon"
+								class="size-10 rounded-2xl bg-slate-100 text-slate-600 hover:bg-slate-200"
+								onclick={onStop}
+							>
+								<div class="size-2.5 rounded-sm bg-current"></div>
+							</Button>
+						{:else}
+							<Button
+								size="icon"
+								class={cn(
+									'size-10 rounded-2xl transition-all duration-300',
+									message.trim()
+										? 'bg-[#7c4dff] text-white shadow-[0_12px_30px_-14px_rgba(124,77,255,0.9)] hover:bg-[#6d42ef]'
+										: 'bg-slate-200 text-slate-400'
+								)}
+								disabled={!message.trim() || disabled || !allFilesReady}
+								onclick={handleSubmit}
+							>
+								{#if uploadingFiles.length > 0 && !allFilesReady}
+									<Loader2 class="size-4 animate-spin" />
+								{:else}
+									<Send class="ml-0.5 size-4" />
+								{/if}
+							</Button>
+						{/if}
+					</div>
 				</div>
 
-				<div class="flex items-center gap-2">
-					{#if isStreaming}
-						<Button
-							variant="secondary"
-							size="icon"
-							class="size-9 animate-in rounded-full bg-secondary fade-in zoom-in hover:bg-secondary/80"
-							onclick={onStop}
-						>
-							<div class="size-2.5 rounded-sm bg-foreground/70"></div>
-						</Button>
-					{:else}
-						<Button
-							size="icon"
-							class={cn(
-								'size-9 rounded-full transition-all duration-300',
-								message.trim()
-									? 'scale-100 bg-primary text-primary-foreground shadow-lg shadow-primary/20'
-									: 'scale-95 bg-muted text-muted-foreground opacity-50 hover:bg-muted'
-							)}
-							disabled={!message.trim() || disabled || !allFilesReady}
-							onclick={handleSubmit}
-						>
-							{#if uploadingFiles.length > 0 && !allFilesReady}
-								<Loader2 class="size-4 animate-spin" />
-							{:else}
-								<Send class="ml-0.5 size-4" />
-							{/if}
-						</Button>
+				<div class="flex flex-wrap items-center justify-between gap-2 border-t border-[#eef2f6] px-2 pb-2.5 pt-2 md:px-3 md:pb-3 md:pt-2.5">
+					<div class="flex flex-wrap items-center gap-0.5">
+						<Tooltip.Root>
+							<Tooltip.Trigger>
+								{#snippet child({ props })}
+									<Button
+										{...props}
+										variant="ghost"
+										size="icon"
+										class="size-9 rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+										onclick={() => fileInput?.click()}
+										disabled={disabled || isStreaming}
+									>
+										<Paperclip class="size-4" />
+									</Button>
+								{/snippet}
+							</Tooltip.Trigger>
+							<Tooltip.Content side="top">Attach file</Tooltip.Content>
+						</Tooltip.Root>
+						<input
+							bind:this={fileInput}
+							type="file"
+							multiple
+							class="hidden"
+							onchange={handleFileSelect}
+							accept={SUPPORTED_FILE_EXTENSIONS.join(',')}
+						/>
+
+						<VoiceRecorder
+							{threadId}
+							{disabled}
+							{isStreaming}
+							onTranscription={handleTranscription}
+						/>
+
+						{#if !hideAgentSelector}
+							<div class="mx-1.5 h-4 w-px bg-[#e4e9ef]"></div>
+							<AgentSelector
+								{agents}
+								{selectedAgentId}
+								onSelectAgent={(id: string) => onAgentChange?.(id)}
+							/>
+						{/if}
+
+						{#if availableModels.length > 0 || pinnedModelInfo}
+							<div class="mx-1 h-4 w-px bg-[#e4e9ef]"></div>
+							<ModelPicker
+								models={availableModels}
+								{selectedModelId}
+								onModelChange={(id) => onModelChange?.(id)}
+								{allowedModelIds}
+								{pinnedModelInfo}
+							/>
+						{/if}
+					</div>
+
+					{#if !floating}
+						<p class="pr-2 text-[11px] text-slate-400">
+							AI can make mistakes. Verify important information.
+						</p>
 					{/if}
 				</div>
 			</div>
 		</div>
 
-		<div
-			class="text-center text-[10px] text-muted-foreground/60 transition-opacity duration-500"
-			class:opacity-0={isFocused}
-		>
-			AI can make mistakes. Please verify important information.
-		</div>
+		{#if floating}
+			<div
+				class="text-center text-[10px] text-muted-foreground/60 transition-opacity duration-500"
+				class:opacity-0={isFocused}
+			>
+				AI can make mistakes. Please verify important information.
+			</div>
+		{/if}
 	</div>
 </div>

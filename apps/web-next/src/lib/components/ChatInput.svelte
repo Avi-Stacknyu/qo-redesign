@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Snippet } from 'svelte';
   import StackButton from '$lib/components/StackButton.svelte';
   import Button from '$lib/components/ui/button/button.svelte';
   import Input from '$lib/components/ui/input/input.svelte';
@@ -9,23 +10,30 @@
     onSubmit,
     onSend,
     noShadow = false,
+    value = $bindable(''),
+    submitDisabled = false,
+    isSubmitting = false,
+    children,
     showAction = true
   }: {
     placeholder?: string;
-    onSubmit?: (value: string) => void;
+    onSubmit?: (value: string) => boolean | void | Promise<boolean | void>;
     onSend?: (value: string) => void;
     noShadow?: boolean;
+    value?: string;
+    submitDisabled?: boolean;
+    isSubmitting?: boolean;
+    children?: Snippet;
     showAction?: boolean;
   } = $props();
 
-  let value = $state('');
+  async function handleSubmit() {
+    const trimmed = value.trim();
+    if (!trimmed || submitDisabled || isSubmitting) return;
 
-  function handleSubmit() {
-    if (value.trim()) {
-      onSubmit?.(value.trim());
-      onSend?.(value.trim());
-      value = '';
-    }
+    onSend?.(trimmed);
+    const result = await onSubmit?.(trimmed);
+    if (result !== false) value = '';
   }
 </script>
 
@@ -53,7 +61,8 @@
 
       <Button
         variant="secondary"
-        class="group bg-transparent p-1 shadow-none hover:cursor-pointer hover:bg-transparent focus:bg-transparent focus:ring-0 active:bg-transparent md:p-2"
+        class="group bg-transparent p-1 shadow-none hover:cursor-pointer hover:bg-transparent focus:bg-transparent focus:ring-0 active:bg-transparent disabled:cursor-not-allowed md:p-2"
+        disabled={submitDisabled || isSubmitting || !value.trim()}
         onclick={handleSubmit}
       >
         <SendHorizonal
@@ -63,7 +72,9 @@
       </Button>
     </div>
 
-    {#if showAction}
+    {#if children}
+      {@render children()}
+    {:else if showAction}
       <div class="flex flex-wrap items-center gap-2">
         <StackButton
           label="Attach"
