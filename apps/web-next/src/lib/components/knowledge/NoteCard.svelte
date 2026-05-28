@@ -1,49 +1,76 @@
 <script lang="ts">
 	import type { Note } from '$lib/remote/knowledge.remote';
-	import { Button } from '$lib/components/ui/button/index.js';
+	import { toggleNotePin, getNotes } from '$lib/remote/knowledge.remote';
 	import { Card, CardContent } from '$lib/components/ui/card/index.js';
-	import { EllipsisVertical, Pin } from '@lucide/svelte';
+	import { Loader2, Pin, PinOff } from '@lucide/svelte';
 
 	let {
 		note,
-		onclick
+		onclick,
+		onpin
 	}: {
 		note: Note;
 		onclick: () => void;
+		onpin?: (pinned: boolean) => void;
 	} = $props();
 
 	function cleanMarkdown(value: string, length = 140) {
 		return value
-			.replace(/<[^>]*>/g, '') // strip any residual HTML
-			.replace(/^#{1,6}\s+/gm, '') // headings
-			.replace(/\*\*(.+?)\*\*/g, '$1') // bold
-			.replace(/\*(.+?)\*/g, '$1') // italic
-			.replace(/~~(.+?)~~/g, '$1') // strikethrough
-			.replace(/`{1,3}[^`]*`{1,3}/g, '') // inline/block code
-			.replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1') // links/images
-			.replace(/^[\s]*[-*+>]\s+/gm, '') // list items, blockquotes
-			.replace(/^\d+\.\s+/gm, '') // ordered list items
-			.replace(/---+/g, '') // horizontal rules
-			.replace(/\n+/g, ' ') // newlines to spaces
-			.replace(/\s+/g, ' ') // collapse whitespace
+			.replace(/<[^>]*>/g, '')
+			.replace(/^#{1,6}\s+/gm, '')
+			.replace(/\*\*(.+?)\*\*/g, '$1')
+			.replace(/\*(.+?)\*/g, '$1')
+			.replace(/~~(.+?)~~/g, '$1')
+			.replace(/`{1,3}[^`]*`{1,3}/g, '')
+			.replace(/!?\[([^\]]*)\]\([^)]*\)/g, '$1')
+			.replace(/^[\s]*[-*+>]\s+/gm, '')
+			.replace(/^\d+\.\s+/gm, '')
+			.replace(/---+/g, '')
+			.replace(/\n+/g, ' ')
+			.replace(/\s+/g, ' ')
 			.trim()
 			.slice(0, length);
 	}
 
-	let preview = $derived(cleanMarkdown(note.content));
-	let title = $derived(cleanMarkdown(note.title, 80) || 'Untitled');
+	let preview = $derived(cleanMarkdown(note.content, 100));
+	let title = $derived(cleanMarkdown(note.title, 60) || 'Untitled');
+	let pinned = $state(false);
+	let pinning = $state(false);
 	let dateBadge = $derived.by(() => {
 		const date = new Date(note.updated || note.created);
 		if (Number.isNaN(date.getTime())) return '';
 		const day = String(date.getDate()).padStart(2, '0');
-		const month = date.toLocaleString('en', { weekday: 'short' }).toUpperCase();
+		const month = date.toLocaleString('en', { month: 'short' }).toUpperCase();
 		return `${day} ${month}`;
+	});
+
+	$effect(() => {
+		pinned = note.pinned;
 	});
 
 	function handleKeydown(event: KeyboardEvent) {
 		if (event.key !== 'Enter' && event.key !== ' ') return;
 		event.preventDefault();
 		onclick();
+	}
+
+	async function handleTogglePin(event: MouseEvent) {
+		event.preventDefault();
+		event.stopPropagation();
+		if (pinning) return;
+
+		const next = !pinned;
+		pinned = next;
+		pinning = true;
+
+		try {
+			await toggleNotePin({ noteId: note.id, pinned: next }).updates(getNotes());
+			onpin?.(next);
+		} catch {
+			pinned = !next;
+		} finally {
+			pinning = false;
+		}
 	}
 </script>
 
@@ -54,41 +81,43 @@
 	onkeydown={handleKeydown}
 	class="group/note cursor-pointer border-0 bg-white p-0 shadow-none ring-[#F6F6F6] transition-colors hover:bg-[#FAFAFA] focus-visible:ring-3 focus-visible:ring-violet-400/25 focus-visible:outline-none"
 >
-	<CardContent class="relative flex flex-col gap-4 p-4">
-		<div class="flex items-center gap-3 pr-10">
-			{#if dateBadge}
-				<span class="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
-					{dateBadge}
-				</span>
-			{/if}
-
-			{#if note.category}
-				<span class="rounded-full bg-white px-3 py-1 text-xs font-medium text-muted-foreground">
-					{note.category}
-				</span>
-			{/if}
-
-			{#if note.pinned}
-				<Pin class="size-4 shrink-0 rotate-45 text-violet-500" />
-			{/if}
-		</div>
-
-		<div class="flex flex-col gap-4">
-			<h2 class="line-clamp-2 text-lg font-semibold text-[#83899F]">{title}</h2>
-
-			<p class="font-Inter line-clamp-3 text-base leading-6 font-normal text-[#83899F]">
+	<CardContent class="flex items-start gap-3 px-4 py-3">
+		<div class="min-w-0 flex-1">
+			<h2 class="line-clamp-1 text-sm font-semibold text-[#83899F] font-Inter">{title}</h2>
+			<p class="font-Inter mt-1 line-clamp-2 text-xs leading-5 text-[#83899F]/70">
 				{preview || 'No note content yet.'}
 			</p>
 		</div>
 
-		<Button
-			size="icon"
-			variant="ghost"
-			class="absolute top-3 right-3 h-9 w-9 cursor-pointer rounded-full text-muted-foreground hover:bg-gray-100"
-			tabindex={-1}
-			aria-label="Open note"
-		>
-			<EllipsisVertical class="h-4 w-4" />
-		</Button>
+		<div class="flex shrink-0 flex-col items-end gap-1.5">
+			<button
+				type="button"
+				onclick={handleTogglePin}
+				class={pinned
+					? 'flex h-7 w-7 items-center justify-center rounded-full bg-amber-100 text-amber-600 transition-colors hover:bg-amber-200'
+					: 'flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground'}
+				aria-label={pinned ? 'Unpin note' : 'Pin note'}
+				aria-pressed={pinned}
+				title={pinned ? 'Unpin' : 'Pin'}
+				disabled={pinning}
+			>
+				{#if pinning}
+					<Loader2 class="size-3.5 animate-spin" />
+				{:else if pinned}
+					<PinOff class="size-3.5" />
+				{:else}
+					<Pin class="size-3.5 rotate-45" />
+				{/if}
+			</button>
+
+			{#if dateBadge}
+				<span class="text-[11px] font-medium text-muted-foreground">{dateBadge}</span>
+			{/if}
+			{#if note.category}
+				<span class="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground font-Inter">
+					{note.category}
+				</span>
+			{/if}
+		</div>
 	</CardContent>
 </Card>
