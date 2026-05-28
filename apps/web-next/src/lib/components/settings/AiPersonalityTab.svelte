@@ -1,11 +1,10 @@
 <script lang="ts">
-	import { Brain, Sparkles, Loader2, MessageSquare, BookOpen, Smile } from '@lucide/svelte';
-	import * as Card from '$lib/components/shadcn/card/index.js';
-	import { Label } from '$lib/components/shadcn/label/index.js';
+	import CustomSelect from '$lib/components/account/CustomSelect.svelte';
+	import PreferenceSelectRow from '$lib/components/account/PreferenceSelectRow.svelte';
+	import type { PersonalitySelectField } from '$lib/components/account/types';
+	import { Brain, Loader2, MessageSquare, Smile, Sparkles } from '@lucide/svelte';
 	import { Switch } from '$lib/components/shadcn/switch/index.js';
 	import { Textarea } from '$lib/components/shadcn/textarea/index.js';
-	import * as Select from '$lib/components/shadcn/select/index.js';
-	import { Separator } from '$lib/components/shadcn/separator/index.js';
 	import { cn } from '$lib/utils';
 	import { toast } from 'svelte-sonner';
 	import { saveAiPersonality } from '$lib/remote/settings.remote';
@@ -85,11 +84,7 @@
 		}
 	];
 
-	const selectFields: Array<{
-		key: keyof AiPersonality;
-		label: string;
-		options: Array<{ value: string; label: string }>;
-	}> = [
+	const selectFields: PersonalitySelectField[] = [
 		{
 			key: 'tone',
 			label: 'Tone',
@@ -128,157 +123,90 @@
 			]
 		}
 	];
-
-	function getDisplayLabel(key: keyof AiPersonality): string {
-		const field = selectFields.find((f) => f.key === key);
-		const current = settings[key] as string;
-		return field?.options.find((o) => o.value === current)?.label ?? current;
-	}
 </script>
 
-<section class="space-y-6" aria-label="AI Personality settings">
-	<div class="flex items-start justify-between">
-		<div class="space-y-1">
-			<h2 class="text-xl font-semibold tracking-tight text-foreground">AI Personality</h2>
-			<p class="text-sm text-muted-foreground">
-				Customize how your AI assistant communicates and behaves.
+<section class="flex flex-col gap-10" aria-label="AI Personality settings">
+	<div class="flex items-center justify-between gap-3">
+		<div class="flex flex-col gap-1.5">
+			<h2 class="font-Inter text-3xl font-medium text-foreground">Custom Instructions</h2>
+			<p class="text-lg font-light text-muted-foreground">
+				Persistent instructions prepended to every conversation.
 			</p>
 		</div>
 		{#if isSaving}
-			<div class="flex items-center gap-1.5 text-xs text-muted-foreground">
-				<Loader2 class="size-3 animate-spin" />
-				<span>Saving…</span>
+			<div class="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-sm text-muted-foreground">
+				<Loader2 class="size-4 animate-spin" />
+				Saving...
 			</div>
 		{/if}
 	</div>
 
-	<!-- Response Style Selectors -->
-	<Card.Root class="overflow-hidden rounded-xl border-border/40 bg-card/90 shadow-lg backdrop-blur">
-		<Card.Content class="p-6">
-			<div class="mb-5 flex items-center gap-2.5">
-				<div class="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-					<BookOpen class="size-4" />
-				</div>
-				<div>
-					<h3 class="text-sm font-semibold text-foreground">Response Style</h3>
-					<p class="text-xs text-muted-foreground">How the AI structures its output</p>
-				</div>
+	<div class="flex flex-col gap-3">
+		<h3 class="font-Inter text-xl font-medium text-muted-foreground">Response Style</h3>
+		<Textarea
+			value={settings.custom_prompt}
+			oninput={handlePromptInput}
+			class="min-h-35 resize-none rounded-3xl border border-[#E4E9EF] bg-white px-5 py-4 text-lg! leading-relaxed text-foreground shadow-none placeholder:text-lg placeholder:font-light placeholder:text-[#8A94A6] placeholder:opacity-70 focus-visible:border-[#904EFF] focus-visible:ring-2 focus-visible:ring-[#904EFF]/20"
+			placeholder="eg . add your instruction here"
+		/>
+	</div>
+
+	<div class="flex flex-col gap-6">
+		<div class="flex flex-col gap-1.5">
+			<h2 class="font-Inter text-3xl font-medium text-foreground">AI Personality</h2>
+			<p class="text-lg font-light text-muted-foreground">
+				Customize how your AI assistant communicates and behaves.
+			</p>
+		</div>
+
+		<h3 class="font-Inter text-xl font-medium text-muted-foreground">Response Style</h3>
+
+		<div class="flex flex-col gap-0 rounded-[2rem] bg-white/75 px-6 shadow-sm ring-1 ring-border/40 backdrop-blur-sm">
+			{#each selectFields as field (field.key)}
+				<PreferenceSelectRow
+					label={field.label}
+					value={settings[field.key] as string}
+					options={field.options}
+					onValueChange={(value) => handleSelect(field.key, value)}
+				/>
+			{/each}
+		</div>
+	</div>
+
+	<div class="flex flex-col gap-6">
+		<div class="flex items-center gap-3">
+			<div class="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+				<Brain class="size-5" />
 			</div>
-
-			<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-				{#each selectFields as field (field.key)}
-					<div class="space-y-2">
-						<Label class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-							{field.label}
-						</Label>
-						<Select.Root
-							type="single"
-							value={settings[field.key] as string}
-							onValueChange={(v) => handleSelect(field.key, v)}
-						>
-							<Select.Trigger
-								class="h-10 w-full rounded-lg border-border/40 bg-muted/30 text-sm transition-colors hover:bg-muted/50"
-							>
-								{getDisplayLabel(field.key)}
-							</Select.Trigger>
-							<Select.Content class="rounded-lg">
-								{#each field.options as option (option.value)}
-									<Select.Item value={option.value} class="text-sm">
-										{option.label}
-									</Select.Item>
-								{/each}
-							</Select.Content>
-						</Select.Root>
-					</div>
-				{/each}
+			<div>
+				<h3 class="font-Inter text-2xl font-medium text-foreground">Behavior</h3>
+				<p class="text-sm text-muted-foreground">Toggle how proactive and expressive the assistant should be.</p>
 			</div>
-		</Card.Content>
-	</Card.Root>
+		</div>
 
-	<Separator class="bg-border/30" />
-
-	<!-- Behavior Toggles -->
-	<Card.Root class="overflow-hidden rounded-xl border-border/40 bg-card/90 shadow-lg backdrop-blur">
-		<Card.Content class="p-6">
-			<div class="mb-5 flex items-center gap-2.5">
-				<div class="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-					<Brain class="size-4" />
-				</div>
-				<div>
-					<h3 class="text-sm font-semibold text-foreground">Behavior</h3>
-					<p class="text-xs text-muted-foreground">Toggle AI features on or off</p>
-				</div>
-			</div>
-
-			<div class="space-y-1">
-				{#each toggleFields as field, i (field.key)}
-					<div
-						class={cn(
-							'flex items-center justify-between gap-4 rounded-lg p-3 transition-colors hover:bg-muted/30',
-							i < toggleFields.length - 1 && 'border-b border-border/20'
-						)}
-					>
-						<div class="flex items-center gap-3">
-							<div
-								class="flex size-8 items-center justify-center rounded-lg bg-muted/40 text-muted-foreground"
-							>
+		<div class="grid gap-4 md:grid-cols-3">
+			{#each toggleFields as field (field.key)}
+				<div class="rounded-[1.75rem] border border-border/40 bg-card/80 p-5 shadow-sm backdrop-blur-sm">
+					<div class="flex items-start justify-between gap-4">
+						<div class="flex items-start gap-3">
+							<div class="flex size-10 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
 								<field.icon class="size-4" />
 							</div>
 							<div>
-								<Label
-									for="toggle-{field.key}"
-									class="cursor-pointer text-sm font-medium text-foreground"
-								>
-									{field.label}
-								</Label>
-								<p class="text-xs text-muted-foreground">{field.description}</p>
+								<p class="text-base font-medium text-foreground">{field.label}</p>
+								<p class="mt-1 text-sm leading-6 text-muted-foreground">{field.description}</p>
 							</div>
 						</div>
-						<Switch
-							id="toggle-{field.key}"
-							checked={settings[field.key] as boolean}
-							onCheckedChange={(c) => handleToggle(field.key, c)}
-						/>
+						<Switch checked={settings[field.key] as boolean} onCheckedChange={(value) => handleToggle(field.key, value)} />
 					</div>
-				{/each}
-			</div>
-		</Card.Content>
-	</Card.Root>
-
-	<Separator class="bg-border/30" />
-
-	<!-- Custom System Instructions -->
-	<Card.Root class="overflow-hidden rounded-xl border-border/40 bg-card/90 shadow-lg backdrop-blur">
-		<Card.Content class="p-6">
-			<div class="mb-5 flex items-center gap-2.5">
-				<div class="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
-					<MessageSquare class="size-4" />
 				</div>
-				<div>
-					<h3 class="text-sm font-semibold text-foreground">Custom Instructions</h3>
-					<p class="text-xs text-muted-foreground">
-						Persistent instructions prepended to every conversation
-					</p>
-				</div>
-			</div>
+			{/each}
+		</div>
+	</div>
 
-			<Textarea
-				value={settings.custom_prompt}
-				oninput={handlePromptInput}
-				placeholder="E.g., Act like a senior financial advisor specializing in portfolio risk management..."
-				rows={4}
-				class="min-h-24 resize-none rounded-lg border-border/40 bg-muted/30 text-sm transition-colors placeholder:text-muted-foreground/40 focus:border-primary/50 focus:bg-background"
-			/>
-			<p class="mt-2 text-[11px] leading-relaxed text-muted-foreground/60">
-				These instructions will be appended to the system prompt for all new conversations.
-			</p>
-		</Card.Content>
-	</Card.Root>
-
-	<!-- Auto-save message -->
-	<div class="flex items-start gap-2 rounded-xl border border-primary/20 bg-primary/5 p-4">
+	<div class="flex items-start gap-2 rounded-[1.75rem] border border-primary/20 bg-primary/5 p-4">
 		<Sparkles class="mt-0.5 size-4 shrink-0 text-primary/70" />
-		<p class="text-xs leading-relaxed text-muted-foreground">
+		<p class="text-sm leading-relaxed text-muted-foreground">
 			All AI personality settings save automatically and apply to new messages immediately.
 		</p>
 	</div>

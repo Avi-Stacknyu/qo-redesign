@@ -1,16 +1,23 @@
 <script lang="ts">
+	import Search2 from '$lib/components/Search2.svelte';
+	import CategoryTabs from '$lib/components/CategoryTabs.svelte';
+	import Shell from '$lib/components/Shell.svelte';
+	import type { AppLayoutState, HeaderCategoryTabsProps } from '$lib/constants/data';
 	import { page } from '$app/stores';
-	import { cn } from '$lib/utils';
-	import { User, Palette, Bot, UserCircle, CreditCard } from '@lucide/svelte';
+	import { PaintRoller, Sparkles, SquareChartGantt, User, Waypoints } from '@lucide/svelte';
+    import { getContext } from 'svelte';
 
 	let { children } = $props();
 
-	const tabs = [
-		{ href: '/preferences/general', label: 'General', icon: User },
-		{ href: '/preferences/appearance', label: 'Appearance', icon: Palette },
-		{ href: '/preferences/ai', label: 'AI Settings', icon: Bot },
-		{ href: '/preferences/profile', label: 'Profile & Memory', icon: UserCircle },
-		{ href: '/preferences/billing', label: 'Billing', icon: CreditCard }
+
+	const appLayoutState = getContext<AppLayoutState>('app-layout');
+
+	const tabs: HeaderCategoryTabsProps[] = [
+		{ href: '/preferences/general', value: '/preferences/general', label: 'General', icon: User, variant: 'secondary' },
+		{ href: '/preferences/appearance', value: '/preferences/appearance', label: 'Appearance', icon: PaintRoller, variant: 'secondary' },
+		{ href: '/preferences/billing', value: '/preferences/billing', label: 'Billing & Plans', icon: SquareChartGantt, variant: 'secondary' },
+		{ href: '/preferences/ai', value: '/preferences/ai', label: 'Agent', icon: Sparkles, variant: 'secondary' },
+		{ href: '/preferences/profile', value: '/preferences/profile', label: 'Memory', icon: Waypoints, variant: 'secondary' }
 	];
 
 	let currentPath = $derived($page.url.pathname);
@@ -20,51 +27,24 @@
 	<title>Preferences — Quant Orion</title>
 </svelte:head>
 
-<div class="relative mx-auto w-full max-w-7xl">
-	<div class="mb-6 space-y-1 sm:mb-8">
-		<h1 class="text-2xl font-light tracking-tight text-foreground sm:text-3xl lg:text-4xl">
-			Preferences
-		</h1>
-		<p class="text-sm text-muted-foreground">Manage your account, preferences, and AI behavior.</p>
-	</div>
+<Shell pageTitle="Preferences" profileHref="/preferences/profile" headerVerticalAlign="center">
+	{#snippet header()}
+		<Search2 />
+	{/snippet}
 
-	<div class="flex flex-col gap-4 md:flex-row md:gap-8">
-		<!-- Sidebar Navigation -->
-		<div
-			class="w-full overflow-x-auto md:sticky md:top-20 md:w-44 md:shrink-0 md:self-start md:overflow-visible"
-		>
-			<nav
-				class="inline-flex w-max gap-1 pb-2 md:w-full md:flex-col md:gap-0.5 md:border-r md:border-border/30 md:pr-4 md:pb-0"
-			>
-				{#each tabs as tab (tab.href)}
-					{@const isActive = currentPath === tab.href}
-					<a
-						href={tab.href}
-						data-sveltekit-noscroll
-						class={cn(
-							'group relative flex flex-none items-center gap-2 rounded-md px-2.5 py-2 text-[13px] font-medium whitespace-nowrap transition-all duration-200',
-							'text-muted-foreground',
-							'hover:bg-accent/50 hover:text-foreground',
-							isActive && 'bg-accent text-foreground shadow-sm',
-							'md:w-full md:justify-start'
-						)}
-					>
-						<tab.icon
-							class={cn(
-								'size-3.5 shrink-0 transition-colors duration-200',
-								'text-muted-foreground/70 group-hover:text-foreground/80',
-								isActive && 'text-primary'
-							)}
-						/>
-						<span>{tab.label}</span>
-					</a>
-				{/each}
-			</nav>
+	{#snippet children()}
+		<!-- sidebar transition div -->
+	<div
+		class={`mx-auto flex w-full max-w-336 flex-col gap-8 transition-[margin,padding] duration-300  ${
+			appLayoutState.sidebarVisible ? 'ml-0' : '-ml-16 sm:-ml-18 lg:-ml-22'
+		}`}
+	>
+			<CategoryTabs tabs={tabs} activeTab={currentPath} />
+			<div class="min-w-0">
+				{#if children}
+					{@render children()}
+				{/if}
+			</div>
 		</div>
-
-		<!-- Content Area -->
-		<div class="min-w-0 flex-1">
-			{@render children()}
-		</div>
-	</div>
-</div>
+	{/snippet}
+</Shell>

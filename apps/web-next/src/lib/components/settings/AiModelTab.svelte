@@ -1,8 +1,9 @@
 <script lang="ts">
+	import CustomSelect from '$lib/components/account/CustomSelect.svelte';
+	import type { SelectOption } from '$lib/components/account/types';
 	import type { AvailableModel } from '$lib/remote/models.remote';
 	import { saveUserModelPreference } from '$lib/remote/models.remote';
-	import { cn } from '$lib/utils';
-	import { Check, ChevronDown, Loader2, Sparkles } from '@lucide/svelte';
+	import { Cpu, Loader2, Sparkles } from '@lucide/svelte';
 	import { toast } from 'svelte-sonner';
 
 	let {
@@ -16,37 +17,21 @@
 	// svelte-ignore state_referenced_locally
 	let selectedId = $state<string | null>(currentPreferenceId);
 	let isSaving = $state(false);
-	let expandedProviders = $state<Set<string>>(new Set());
+
+	const SYSTEM_MODEL_VALUE = '__system__';
 
 	const systemDefault = $derived(models.find((m) => m.is_system_default) ?? null);
-
-	const groupedModels = $derived.by(() => {
-		const groups = new Map<string, { providerName: string; models: AvailableModel[] }>();
-		for (const m of models) {
-			const existing = groups.get(m.provider_key);
-			if (existing) existing.models.push(m);
-			else groups.set(m.provider_key, { providerName: m.provider_name, models: [m] });
-		}
-		return [...groups.entries()].sort(([a], [b]) => a.localeCompare(b));
-	});
-
-	// Auto-expand the provider that contains the selected model
-	$effect(() => {
-		if (selectedId) {
-			for (const [key, group] of groupedModels) {
-				if (group.models.some((m) => m.id === selectedId)) {
-					expandedProviders.add(key);
-					break;
-				}
-			}
-		}
-	});
-
-	function toggleProvider(key: string) {
-		if (expandedProviders.has(key)) expandedProviders.delete(key);
-		else expandedProviders.add(key);
-		expandedProviders = new Set(expandedProviders);
-	}
+	const selectedModel = $derived(models.find((model) => model.id === selectedId) ?? null);
+	const modelOptions = $derived<SelectOption[]>([
+		{
+			value: SYSTEM_MODEL_VALUE,
+			label: systemDefault ? `System Default (${systemDefault.display_name})` : 'System Default'
+		},
+		...models.map((model) => ({
+			value: model.id,
+			label: `${model.provider_name} - ${model.display_name}`
+		}))
+	]);
 
 	async function selectModel(modelId: string | null) {
 		if (modelId === selectedId) return;
@@ -65,124 +50,78 @@
 	}
 </script>
 
-<section class="space-y-5" aria-label="AI Model settings">
-	<div class="flex items-start justify-between">
-		<div class="space-y-1">
-			<h2 class="text-xl font-semibold tracking-tight text-foreground">AI Model</h2>
-			<p class="text-sm text-muted-foreground">
-				Choose your default model. Per-chat overrides are available in the chat input.
-			</p>
-		</div>
-		{#if isSaving}
-			<Loader2 class="size-4 animate-spin text-muted-foreground" />
-		{/if}
+<section class="flex flex-col gap-6" aria-label="AI Model settings">
+	<div class="flex flex-col gap-1.5">
+		<h2 class="font-Inter text-3xl font-medium text-foreground">AI Model</h2>
+		<p class="text-lg font-light text-muted-foreground">
+			Choose your default model. Per-chat overrides are available in the chat input.
+		</p>
 	</div>
 
-	<!-- System Default Option -->
-	<button
-		type="button"
-		onclick={() => selectModel(null)}
-		class={cn(
-			'flex w-full items-center gap-4 rounded-xl border-2 p-4 text-left transition-all duration-200',
-			!selectedId
-				? 'border-primary bg-primary/5 shadow-sm'
-				: 'border-border/30 bg-muted/10 hover:border-border/50 hover:bg-muted/20'
-		)}
-	>
-		<div
-			class={cn(
-				'flex size-10 shrink-0 items-center justify-center rounded-lg transition-colors',
-				!selectedId ? 'bg-primary/15 text-primary' : 'bg-muted/50 text-muted-foreground'
-			)}
-		>
-			<Sparkles class="size-5" />
+	<div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+		<div class="flex flex-col gap-1.5">
+			<h3 class="font-Inter text-2xl font-medium text-primary">Default System</h3>
+			<p class="font-light text-muted-foreground">Pick the model used for new conversations.</p>
 		</div>
-		<div class="min-w-0 flex-1">
-			<p class="text-sm font-medium text-foreground">System Default</p>
-			<p class="text-xs text-muted-foreground">
-				{systemDefault ? systemDefault.display_name : 'Configured by admin'} — automatically updated
+
+		<CustomSelect
+			value={selectedId ?? SYSTEM_MODEL_VALUE}
+			options={modelOptions}
+			onValueChange={(value) => selectModel(value === SYSTEM_MODEL_VALUE ? null : value)}
+		/>
+	</div>
+
+	<div class="grid gap-4 md:grid-cols-[minmax(0,1.5fr)_minmax(18rem,1fr)]">
+		<div class="rounded-[2rem] border border-border/40 bg-card/80 p-6 shadow-sm backdrop-blur-sm">
+			<div class="flex items-center gap-3">
+				<div class="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+					<Cpu class="size-5" />
+				</div>
+				<div>
+					<p class="text-sm font-medium text-muted-foreground">Active Selection</p>
+					<h4 class="font-Inter text-2xl font-medium text-foreground">
+						{selectedModel?.display_name ?? systemDefault?.display_name ?? 'System Default'}
+					</h4>
+				</div>
+			</div>
+
+			<div class="mt-5 grid gap-3 sm:grid-cols-2">
+				<div class="rounded-[1.5rem] bg-muted/60 p-4">
+					<p class="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">Provider</p>
+					<p class="mt-2 text-base font-medium text-foreground">
+						{selectedModel?.provider_name ?? systemDefault?.provider_name ?? 'Admin configured'}
+					</p>
+				</div>
+				<div class="rounded-[1.5rem] bg-muted/60 p-4">
+					<p class="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">Context Window</p>
+					<p class="mt-2 text-base font-medium text-foreground">
+						{selectedModel?.context_window
+							? `${Math.round(selectedModel.context_window / 1000)}K tokens`
+							: systemDefault?.context_window
+								? `${Math.round(systemDefault.context_window / 1000)}K tokens`
+								: 'Managed automatically'}
+					</p>
+				</div>
+			</div>
+		</div>
+
+		<div class="rounded-[2rem] border border-primary/15 bg-primary/5 p-6">
+			<div class="flex items-center gap-2 text-primary">
+				<Sparkles class="size-4" />
+				<span class="text-sm font-semibold tracking-[0.18em] uppercase">Status</span>
+			</div>
+			<p class="mt-4 text-lg font-medium text-foreground">
+				{selectedId ? 'Custom model selected' : 'Using system default'}
 			</p>
+			<p class="mt-2 text-sm leading-6 text-muted-foreground">
+				Changes save immediately and apply to new chats. Existing chats can still override the model per thread.
+			</p>
+			{#if isSaving}
+				<div class="mt-4 inline-flex items-center gap-2 rounded-full bg-background/80 px-3 py-1.5 text-sm text-muted-foreground">
+					<Loader2 class="size-4 animate-spin" />
+					Saving selection...
+				</div>
+			{/if}
 		</div>
-		{#if !selectedId}
-			<div
-				class="flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground"
-			>
-				<Check class="size-3" />
-			</div>
-		{/if}
-	</button>
-
-	<!-- Provider Groups (Accordion) -->
-	<div class="space-y-2">
-		{#each groupedModels as [key, group] (key)}
-			{@const isExpanded = expandedProviders.has(key)}
-			{@const hasSelected = group.models.some((m) => m.id === selectedId)}
-			<div class="overflow-hidden rounded-xl border border-border/30 bg-card/50 backdrop-blur">
-				<button
-					type="button"
-					onclick={() => toggleProvider(key)}
-					class="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/30"
-				>
-					<span class="text-xs font-semibold tracking-wider text-muted-foreground/70 uppercase">
-						{group.providerName}
-					</span>
-					{#if hasSelected}
-						<span
-							class="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary"
-						>
-							Active
-						</span>
-					{/if}
-					<span class="ml-auto text-[11px] text-muted-foreground/50">
-						{group.models.length} model{group.models.length > 1 ? 's' : ''}
-					</span>
-					<ChevronDown
-						class={cn(
-							'size-4 text-muted-foreground/50 transition-transform duration-200',
-							isExpanded && 'rotate-180'
-						)}
-					/>
-				</button>
-
-				{#if isExpanded}
-					<div class="border-t border-border/20 px-2 py-2">
-						{#each group.models as model (model.id)}
-							{@const isSelected = model.id === selectedId}
-							<button
-								type="button"
-								onclick={() => selectModel(model.id)}
-								class={cn(
-									'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-all duration-150',
-									isSelected
-										? 'bg-primary/8 text-foreground'
-										: 'text-muted-foreground hover:bg-muted/30 hover:text-foreground'
-								)}
-							>
-								<div
-									class={cn(
-										'flex size-4 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
-										isSelected
-											? 'border-primary bg-primary'
-											: 'border-muted-foreground/30 bg-transparent'
-									)}
-								>
-									{#if isSelected}
-										<Check class="size-2.5 text-primary-foreground" />
-									{/if}
-								</div>
-								<div class="min-w-0 flex-1">
-									<p class="truncate text-sm font-medium">{model.display_name}</p>
-								</div>
-								{#if model.context_window}
-									<span class="shrink-0 text-[11px] text-muted-foreground/60 tabular-nums">
-										{Math.round(model.context_window / 1000)}K
-									</span>
-								{/if}
-							</button>
-						{/each}
-					</div>
-				{/if}
-			</div>
-		{/each}
 	</div>
 </section>

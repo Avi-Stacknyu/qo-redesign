@@ -1,10 +1,10 @@
 <script lang="ts">
-	import ProfileTab from '$lib/components/settings/ProfileTab.svelte';
+	import MemoryTab from '$lib/components/account/memory/MemoryTab.svelte';
 
 	let { data } = $props();
 </script>
 
-<ProfileTab
+<MemoryTab
 	profile={data.profile}
 	defaultAgentId={data.defaultAgentId}
 	graph={data.graph}

@@ -76,20 +76,26 @@
 	}
 </script>
 
-<div class="space-y-10">
-	<!-- Section 1: Current Plan + Balance Stats -->
+<div class="space-y-12">
+	<section class="flex flex-col gap-1.5">
+		<h1 class="font-Inter text-3xl font-medium text-foreground">Subscription Plans</h1>
+		<p class="text-lg font-light text-muted-foreground">
+			Manage your current plan, buy credit packs, and review your usage history.
+		</p>
+	</section>
+
 	<div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-		<div class="rounded-xl border border-primary/20 bg-primary/5 p-5">
+		<div class="rounded-[1.75rem] border border-primary/20 bg-primary/5 p-6">
 			<div class="flex items-center justify-between">
 				<div>
-					<p class="text-xs text-muted-foreground">Current Plan</p>
-					<p class="text-lg font-semibold text-foreground">{currentPlanName}</p>
+					<p class="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">Current Plan</p>
+					<p class="mt-2 text-2xl font-semibold text-foreground">{currentPlanName}</p>
 				</div>
 				{#if currentPlanId}
 					<button
 						onclick={handlePortal}
 						disabled={portalLoading}
-						class="flex items-center gap-1.5 rounded-lg border border-border/40 px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/30 hover:text-foreground disabled:opacity-50"
+						class="flex items-center gap-1.5 rounded-full border border-border/40 px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted/30 hover:text-foreground disabled:opacity-50"
 					>
 						{#if portalLoading}
 							<Loader2 class="size-3 animate-spin" />
@@ -102,30 +108,30 @@
 			</div>
 		</div>
 
-		<div class="rounded-xl border border-border/30 bg-card/40 p-5 backdrop-blur">
+		<div class="rounded-[1.75rem] border border-border/30 bg-card/40 p-6 backdrop-blur">
 			<div class="flex items-center gap-3">
-				<div class="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+				<div class="flex size-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
 					<Coins class="size-4" />
 				</div>
 				<div>
-					<p class="text-xs text-muted-foreground">Credit Balance</p>
-					<p class="text-xl font-semibold text-foreground tabular-nums">
+					<p class="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">Credit Balance</p>
+					<p class="mt-2 text-2xl font-semibold text-foreground tabular-nums">
 						{formatCredits(balance.balance)}
 					</p>
 				</div>
 			</div>
 		</div>
 
-		<div class="rounded-xl border border-border/30 bg-card/40 p-5 backdrop-blur">
+		<div class="rounded-[1.75rem] border border-border/30 bg-card/40 p-6 backdrop-blur">
 			<div class="flex items-center gap-3">
 				<div
-					class="flex size-9 items-center justify-center rounded-lg bg-orange-500/10 text-orange-500"
+					class="flex size-11 items-center justify-center rounded-2xl bg-orange-500/10 text-orange-500"
 				>
 					<Receipt class="size-4" />
 				</div>
 				<div>
-					<p class="text-xs text-muted-foreground">Total Spent</p>
-					<p class="text-xl font-semibold text-foreground tabular-nums">
+					<p class="text-xs font-semibold tracking-[0.18em] text-muted-foreground uppercase">Total Spent</p>
+					<p class="mt-2 text-2xl font-semibold text-foreground tabular-nums">
 						{formatCredits(balance.lifetime_spent)}
 					</p>
 				</div>
@@ -136,7 +142,7 @@
 	<!-- Section 2: Subscription Plans -->
 	{#if plans.subscriptions.length > 0}
 		<section>
-			<h2 class="mb-4 text-lg font-semibold text-foreground">Subscription Plans</h2>
+			<h2 class="mb-4 font-Inter text-2xl font-medium text-foreground">Choose your plan</h2>
 			<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 				{#each plans.subscriptions as plan (plan.id)}
 					<PlanCard
@@ -153,7 +159,7 @@
 	<!-- Section 3: Credit Packs -->
 	{#if plans.topups.length > 0}
 		<section>
-			<h2 class="mb-4 text-lg font-semibold text-foreground">Credit Packs</h2>
+			<h2 class="mb-4 font-Inter text-2xl font-medium text-foreground">Credit Packs</h2>
 			<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
 				{#each plans.topups as pack (pack.id)}
 					<CreditPackCard {pack} onBuy={handleCheckout} loadingId={checkoutLoadingId} />

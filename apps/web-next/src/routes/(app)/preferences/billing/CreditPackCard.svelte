@@ -20,30 +20,29 @@
 	let isDisabled = $derived(loadingId !== null);
 </script>
 
-<div
-	class="flex items-center justify-between rounded-xl border border-border/30 bg-card/40 p-4 transition-colors hover:border-border/50"
->
+<div class="rounded-[1.75rem] border border-border/30 bg-card/70 p-5 transition-colors hover:border-border/50 hover:shadow-sm">
+	<div class="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
 	<div class="flex items-center gap-3">
-		<div class="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
+		<div class="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
 			<Coins class="size-4" />
 		</div>
 		<div>
-			<p class="text-sm font-semibold text-foreground">{pack.title}</p>
+			<p class="font-Inter text-xl font-semibold text-foreground">{pack.title}</p>
 			{#if pack.subtitle}
-				<p class="text-xs text-muted-foreground">{pack.subtitle}</p>
+				<p class="text-sm text-muted-foreground">{pack.subtitle}</p>
 			{/if}
 		</div>
 	</div>
 
 	<div class="flex items-center gap-4">
-		<p class="text-sm font-bold text-foreground tabular-nums">
+		<p class="font-Inter text-3xl font-semibold text-foreground tabular-nums">
 			{pack.credits.toLocaleString()}
-			<span class="text-xs font-normal text-muted-foreground">credits</span>
+			<span class="ml-1 text-sm font-normal text-muted-foreground">credits</span>
 		</p>
 		<button
 			onclick={() => onBuy(pack.id)}
 			disabled={isDisabled}
-			class="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+			class="flex items-center gap-1.5 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
 		>
 			{#if isLoading}
 				<Loader2 class="size-3 animate-spin" />
@@ -51,4 +50,5 @@
 			Buy
 		</button>
 	</div>
+</div>
 </div>

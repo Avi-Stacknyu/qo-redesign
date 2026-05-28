@@ -11,6 +11,7 @@
 			id: string;
 			title: string;
 			subtitle?: string;
+			description?: string;
 			credits: number;
 			highlight?: boolean;
 			points?: string;
@@ -35,44 +36,53 @@
 </script>
 
 <div
-	class="relative flex flex-col rounded-xl border p-5 transition-colors {plan.highlight
-		? 'border-primary/50 bg-primary/5'
-		: 'border-border/30 bg-card/40'} {isCurrent ? 'ring-2 ring-primary/30' : ''}"
+	class="relative flex flex-col gap-4 rounded-[1.75rem] border-0 p-6 ring-0 transition-all duration-200 {plan.highlight
+		? 'bg-primary text-primary-foreground shadow-lg'
+		: 'bg-card shadow-sm hover:shadow-md'} {isCurrent ? 'ring-2 ring-primary/30' : ''}"
 >
 	{#if isCurrent}
 		<span
-			class="absolute -top-2.5 left-4 rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-primary-foreground"
+			class="absolute -top-3 left-6 rounded-full bg-primary px-3 py-1 text-[10px] font-semibold text-primary-foreground"
 		>
 			Current Plan
 		</span>
 	{/if}
 
-	<h3 class="text-lg font-semibold text-foreground">{plan.title}</h3>
-	{#if plan.subtitle}
-		<p class="mt-0.5 text-xs text-muted-foreground">{plan.subtitle}</p>
-	{/if}
+	<div class="flex items-start justify-between gap-3">
+		<div>
+			<h3 class="font-Inter text-2xl font-semibold {plan.highlight ? 'text-primary-foreground' : 'text-foreground'}">{plan.title}</h3>
+			<p class="mt-1 text-sm {plan.highlight ? 'text-primary-foreground/80' : 'text-muted-foreground'}">
+				{plan.description ?? plan.subtitle ?? 'Flexible access to Quant Orion tools and credits.'}
+			</p>
+		</div>
+		{#if plan.highlight}
+			<span class="rounded-full bg-white/90 px-4 py-2 text-xs font-semibold text-primary">Popular</span>
+		{/if}
+	</div>
 
-	<p class="mt-3 text-2xl font-bold text-foreground tabular-nums">
-		{plan.credits.toLocaleString()}
-		<span class="text-sm font-normal text-muted-foreground">credits</span>
-	</p>
+	<div class="flex items-end gap-1">
+		<span class="font-Inter text-5xl font-semibold {plan.highlight ? 'text-primary-foreground' : 'text-foreground'}">
+			{plan.credits.toLocaleString()}
+		</span>
+		<span class="mb-1 text-base {plan.highlight ? 'text-primary-foreground/75' : 'text-muted-foreground'}">credits</span>
+	</div>
 
 	{#if features.length > 0}
-		<ul class="mt-4 space-y-1.5">
+		<ul class="flex flex-col gap-2">
 			{#each features as feature, i (i)}
-				<li class="flex items-start gap-2 text-xs text-muted-foreground">
-					<Check class="mt-0.5 size-3 shrink-0 text-primary" />
+				<li class="flex items-start gap-2 text-sm {plan.highlight ? 'text-primary-foreground' : 'text-foreground'}">
+					<Check class="mt-0.5 size-4 shrink-0 {plan.highlight ? 'text-primary-foreground' : 'text-primary'}" />
 					<span>{feature}</span>
 				</li>
 			{/each}
 		</ul>
 	{/if}
 
-	<div class="mt-auto pt-4">
+	<div class="mt-auto pt-2">
 		{#if isCurrent}
 			<button
 				disabled
-				class="w-full rounded-lg bg-muted/50 px-4 py-2 text-sm font-medium text-muted-foreground"
+				class="w-full rounded-full bg-white/15 px-4 py-3 text-sm font-medium {plan.highlight ? 'text-primary-foreground' : 'text-muted-foreground'}"
 			>
 				Current Plan
 			</button>
@@ -80,7 +90,7 @@
 			<button
 				onclick={() => onSelect(plan.id)}
 				disabled={isDisabled}
-				class="flex w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+				class="flex w-full items-center justify-center gap-2 rounded-full px-4 py-3 text-base font-semibold transition-colors disabled:opacity-50 {plan.highlight ? 'bg-white text-primary hover:bg-white/90' : 'bg-primary text-primary-foreground hover:bg-primary/90'}"
 			>
 				{#if isLoading}
 					<Loader2 class="size-4 animate-spin" />

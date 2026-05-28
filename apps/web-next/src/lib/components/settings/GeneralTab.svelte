@@ -139,39 +139,41 @@
 	}
 </script>
 
-<section class="space-y-6" aria-label="Profile settings">
-	<div class="space-y-1">
-		<h2 class="text-xl font-semibold tracking-tight text-foreground">Profile Information</h2>
-		<p class="text-sm text-muted-foreground">Your personal details and public identity.</p>
-	</div>
+<section class="flex flex-col gap-5" aria-label="Profile settings">
+	<div class="flex flex-col gap-20">
+		<section class="flex flex-col gap-1">
+			<h1 class="font-Inter text-3xl font-medium text-primary">Profile Information</h1>
+			<p class="text-muted-foreground">Your personal details and public identity.</p>
+		</section>
 
-	<Card.Root class="overflow-hidden rounded-xl border-border/40 bg-card/90 shadow-lg backdrop-blur">
-		<Card.Content class="p-6">
-			<div class="flex flex-col gap-6 sm:flex-row sm:items-start">
-				<div class="flex flex-col items-center gap-3">
-					<div class="group relative">
-						<Avatar.Root
-							class="size-20 rounded-2xl border-2 border-border/30 shadow-md ring-4 ring-background transition-all duration-300 hover:shadow-xl"
+		<section class="flex flex-col gap-8">
+			<div class="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
+				<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-5">
+					<div class="relative">
+						<Button
+							class="size-[6rem] rounded-full bg-white p-0 shadow-sm"
+							variant="secondary"
+							onclick={() => fileInput?.click()}
 						>
-							{#if avatarUrl}
-								<Avatar.Image src={avatarUrl} alt={name} />
-							{/if}
-							<Avatar.Fallback
-								class="rounded-2xl bg-linear-to-br from-primary/20 to-primary/5 text-xl font-semibold text-primary"
-							>
-								{initials}
-							</Avatar.Fallback>
-						</Avatar.Root>
+							<Avatar.Root class="size-[6rem]">
+								{#if avatarUrl}
+									<Avatar.Image class="rounded-full object-cover" src={avatarUrl} alt={name} />
+								{/if}
+								<Avatar.Fallback class="rounded-full bg-linear-to-br from-primary/20 to-primary/5 text-2xl font-semibold text-primary">
+									{initials}
+								</Avatar.Fallback>
+							</Avatar.Root>
+						</Button>
 						<button
 							type="button"
 							onclick={() => fileInput?.click()}
 							disabled={isUploadingAvatar}
-							class="absolute -right-1 -bottom-1 flex size-7 items-center justify-center rounded-full border-2 border-background bg-primary text-primary-foreground shadow-md transition-all hover:scale-110 hover:bg-primary/90 disabled:opacity-50"
+							class="absolute -right-1 -bottom-1 flex size-8 items-center justify-center rounded-full border-2 border-background bg-primary text-primary-foreground shadow-md transition-all hover:scale-105 hover:bg-primary/90 disabled:opacity-50"
 						>
 							{#if isUploadingAvatar}
-								<Loader2 class="size-3.5 animate-spin" />
+								<Loader2 class="size-4 animate-spin" />
 							{:else}
-								<Camera class="size-3.5" />
+								<Camera class="size-4" />
 							{/if}
 						</button>
 						<input
@@ -182,100 +184,77 @@
 							onchange={handleAvatarUpload}
 						/>
 					</div>
-					<div class="flex items-center gap-1">
-						<span class="text-[10px] font-medium tracking-wide text-muted-foreground/60 uppercase">
-							Avatar
-						</span>
+
+					<div>
+						<h3 class="font-Inter text-xl font-medium text-primary">{name}</h3>
+						<p class="text-muted-foreground">{userEmail}</p>
 						{#if avatarUrl}
 							<button
 								type="button"
 								onclick={handleAvatarRemove}
 								disabled={isUploadingAvatar}
-								class="text-muted-foreground/40 transition-colors hover:text-destructive disabled:opacity-50"
-								title="Remove avatar"
+								class="mt-3 inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-destructive disabled:opacity-50"
 							>
-								<Trash2 class="size-3" />
+								<Trash2 class="size-3.5" />
+								Remove avatar
 							</button>
 						{/if}
 					</div>
 				</div>
 
-				<div class="flex-1 space-y-4">
-					<div class="space-y-2">
-						<Label
-							for="profile-name"
-							class="text-xs font-semibold tracking-wide text-muted-foreground uppercase"
-						>
-							Display Name
-						</Label>
-						<div class="relative">
-							<User
-								class="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground/50"
-							/>
-							<Input
-								id="profile-name"
-								bind:value={name}
-								placeholder="Your display name"
-								class="h-10 rounded-lg border-border/40 bg-muted/30 pl-10 text-sm transition-colors focus:border-primary/50 focus:bg-background"
-							/>
-						</div>
-					</div>
-
-					<div class="space-y-2">
-						<Label
-							for="profile-email"
-							class="text-xs font-semibold tracking-wide text-muted-foreground uppercase"
-						>
-							Email Address
-						</Label>
-						<div class="relative">
-							<Mail
-								class="absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground/50"
-							/>
-							<Input
-								id="profile-email"
-								value={userEmail}
-								disabled
-								class="h-10 rounded-lg border-border/40 bg-muted/20 pl-10 text-sm opacity-60"
-							/>
-						</div>
-						<p class="text-[11px] text-muted-foreground/60">
-							Email cannot be changed from here. Contact support for email changes.
-						</p>
-					</div>
-				</div>
-			</div>
-		</Card.Content>
-
-		{#if hasNameChanges}
-			<Card.Footer class="border-t border-border/30 bg-muted/20 px-6 py-3">
-				<div class="flex w-full items-center justify-end gap-3">
+				<div class="flex gap-3">
 					<Button
-						variant="ghost"
-						size="sm"
-						class="text-xs text-muted-foreground"
+						class="rounded-full px-6"
+						onclick={handleSaveProfile}
+						disabled={!hasNameChanges || isSaving}
+					>
+						{#if isSaving}
+							<Loader2 class="mr-2 size-4 animate-spin" />
+							Saving
+						{:else}
+							<Save class="mr-2 size-4" />
+							Save
+						{/if}
+					</Button>
+					<Button
+						variant="outline"
+						class="rounded-full px-6"
 						onclick={() => (name = userName)}
+						disabled={!hasNameChanges || isSaving}
 					>
 						Cancel
 					</Button>
-					<Button
-						size="sm"
-						class="gap-2 rounded-lg px-4 text-xs"
-						onclick={handleSaveProfile}
-						disabled={isSaving}
-					>
-						{#if isSaving}
-							<Loader2 class="size-3.5 animate-spin" />
-							Saving…
-						{:else}
-							<Save class="size-3.5" />
-							Save Changes
-						{/if}
-					</Button>
 				</div>
-			</Card.Footer>
-		{/if}
-	</Card.Root>
+			</div>
+
+			<div class="grid gap-6 xl:grid-cols-2">
+				<div class="flex w-full flex-col gap-2">
+					<Label for="profile-name" class="font-Inter text-sm text-primary dark:text-neutral-200">
+						Full Name
+					</Label>
+					<Input
+						id="profile-name"
+						bind:value={name}
+						placeholder="Your full name"
+						class="h-12 rounded-xl border-0 bg-white px-4 text-sm shadow-none ring-0 placeholder:text-neutral-400 focus-visible:ring-1 focus-visible:ring-neutral-300 dark:bg-neutral-900"
+					/>
+				</div>
+
+				<div class="flex w-full flex-col gap-2">
+					<Label for="profile-email" class="font-Inter text-sm text-primary dark:text-neutral-200">
+						Email
+					</Label>
+					<Input
+						id="profile-email"
+						value={userEmail}
+						disabled
+						class="h-12 rounded-xl border-0 bg-white px-4 text-sm shadow-none ring-0 placeholder:text-neutral-400 dark:bg-neutral-900"
+					/>
+					<p class="text-sm text-muted-foreground">Email cannot be changed from this page.</p>
+				</div>
+			</div>
+		</section>
+	</div>
 
 	<!-- <Separator class="bg-border/30" />
 

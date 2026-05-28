@@ -230,7 +230,7 @@
               <button
                 {...props}
                 type="button"
-                onclick={() => navigate('/account')}
+                onclick={() => navigate('/preferences')}
                 class={cn(
                   'inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full transition-all',
                   isActive('/account') ? 'ring-2 ring-[#904EFF]' : 'hover:bg-slate-100'

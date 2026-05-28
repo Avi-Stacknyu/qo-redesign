@@ -6,7 +6,7 @@
 	const homeLocation = await loadHomeLocation();
 </script>
 
-<div class="max-w-3xl">
+<div class="w-full">
 	<GeneralTab
 		userName={$page.data.user?.name ?? ''}
 		userEmail={$page.data.user?.email ?? ''}
