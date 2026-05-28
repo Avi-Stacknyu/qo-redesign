@@ -105,7 +105,7 @@
 
 {#if role === 'user' || hasContent || hasGenerativeUIParts}
 	<div class="w-full px-3 py-2 md:px-5">
-		<div class="mx-auto max-w-4xl">
+		<div class="mx-auto w-full">
 			<div class={cn('flex items-end gap-3', role === 'user' ? 'flex-row-reverse' : 'flex-row')}>
 				{#if role === 'assistant' && agent}
 					<AgentAvatar {agent} size="chat" />

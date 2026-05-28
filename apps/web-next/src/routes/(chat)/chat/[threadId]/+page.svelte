@@ -8,6 +8,7 @@
 	import { saveMessageAsNote } from '$lib/remote/knowledge.remote';
 	import { Chat } from '@ai-sdk/svelte';
 	import AgentAvatar from '$lib/components/AgentAvatar.svelte';
+	import ConversationPanel from '$lib/components/chat/ConversationPanel.svelte';
 	import QIcon from '$lib/components/icons/QIcon.svelte';
 	import type {
 		ChatFileAttachment,
@@ -553,108 +554,116 @@
 	}
 </script>
 
-<div class="mx-auto flex h-full w-full max-w-5xl flex-col px-3 py-3 md:px-5 md:py-4">
-	<div class="relative flex h-full min-h-0 flex-col overflow-hidden rounded-[30px] border border-white/70 bg-white/88 shadow-[0_20px_50px_rgba(15,23,42,0.08)] backdrop-blur-sm">
-		<header class="flex items-center justify-between border-b border-[#eef2f6] px-5 py-4">
-			<div class="flex items-center gap-3">
-				<div class="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-[#7c4dff] text-white shadow-[0_10px_30px_rgba(124,77,255,0.32)]">
-					{#if currentAgent}
-						<AgentAvatar agent={currentAgent} size="sm" />
-					{:else}
-						<QIcon class="size-4" />
-					{/if}
-				</div>
+<div class="mx-auto flex h-full w-full flex-col px-3 py-3 md:px-5 md:py-4">
+	<ConversationPanel
+		class="relative h-full min-h-0 border border-white/70 bg-white/88"
+		title={conversationTitle}
+		status={conversationStatus}
+		showMenu={false}
+	>
+		{#snippet headerIcon()}
+			{#if currentAgent}
+				<AgentAvatar agent={currentAgent} size="sm" />
+			{:else}
+				<QIcon class="size-4" />
+			{/if}
+		{/snippet}
 
-				<div class="leading-tight">
-					<p class="text-[15px] font-semibold text-[#25324b]">{conversationTitle}</p>
-					<p class="flex items-center gap-1.5 text-[11px] font-medium text-[#67b95f]">
-						<span class="inline-block size-1.5 rounded-full bg-current"></span>
-						{conversationStatus}
-					</p>
-				</div>
-			</div>
-
+		{#snippet headerTrailing()}
 			<div class="text-right leading-tight">
 				<p class="text-[10px] font-semibold tracking-[0.24em] text-slate-400 uppercase">Thread</p>
 				<p class="max-w-48 truncate text-sm text-slate-500">{data.thread.title ?? 'New Chat'}</p>
 			</div>
-		</header>
+		{/snippet}
 
-		<div bind:this={messagesContainer} class="flex-1 overflow-y-auto bg-[linear-gradient(180deg,rgba(250,247,255,0.85),rgba(255,255,255,0.96))]">
-			{#if chat.messages.length === 0}
-				<div class="flex h-full items-center justify-center px-6 py-10">
-					<div class="max-w-md text-center">
-						<div class="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-[#7c4dff] text-white shadow-[0_12px_30px_rgba(124,77,255,0.22)]">
-							{#if currentAgent}
-								<AgentAvatar agent={currentAgent} size="lg" />
-							{:else}
-								<QIcon class="size-6" />
-							{/if}
+		{#snippet content()}
+			<div
+				bind:this={messagesContainer}
+				class="h-full overflow-y-auto bg-[linear-gradient(180deg,rgba(250,247,255,0.85),rgba(255,255,255,0.96))]"
+			>
+				{#if chat.messages.length === 0}
+					<div class="flex h-full items-center justify-center px-6 py-10">
+						<div class="max-w-md text-center">
+							<div class="mx-auto mb-4 flex size-14 items-center justify-center rounded-2xl bg-[#7c4dff] text-white shadow-[0_12px_30px_rgba(124,77,255,0.22)]">
+								{#if currentAgent}
+									<AgentAvatar agent={currentAgent} size="lg" />
+								{:else}
+									<QIcon class="size-6" />
+								{/if}
+							</div>
+							<h2 class="text-xl font-semibold text-[#25324b]">How can I help you today?</h2>
+							<p class="mt-2 text-sm leading-6 text-slate-500">
+								Ask about your portfolio, finances, or anything else.
+							</p>
 						</div>
-						<h2 class="text-xl font-semibold text-[#25324b]">How can I help you today?</h2>
-						<p class="mt-2 text-sm leading-6 text-slate-500">
-							Ask about your portfolio, finances, or anything else.
-						</p>
+					</div>
+				{:else}
+					<div class="space-y-1 px-1 py-6 md:px-3 md:py-7">
+						{#each chat.messages as message, i (`${message.id}-${i}`)}
+							{@const content = getMessageContent(message as UIMessageLike)}
+							{@const parts = uiPartsToMessageParts(message.parts)}
+							{@const files = getMessageFiles(message.id)}
+							{@const meta = message.metadata as Record<string, unknown> | undefined}
+							<ChatMessage
+								role={message.role as 'user' | 'assistant'}
+								{content}
+								timestamp={meta?.createdAt as string | undefined}
+								{files}
+								{parts}
+								agent={message.role === 'assistant' ? currentAgent : undefined}
+								onConfirmationRespond={handleConfirmationRespond}
+								onInputSubmit={handleInputSubmit}
+								onSaveAsNote={message.role === 'assistant'
+									? (c) => handleSaveAsNote(message.id, c)
+									: undefined}
+								isSaved={savedMessageIds.has(message.id)}
+							/>
+						{/each}
+						{#if isThinking || currentToolName}
+							<ThinkingIndicator {isThinking} {currentToolName} agent={currentAgent} />
+						{/if}
+					</div>
+				{/if}
+			</div>
+		{/snippet}
+
+		{#snippet footer()}
+			{#if modelRestrictionWarning}
+				<div class="absolute top-20 right-0 left-0 z-40 flex justify-center px-4">
+					<div class="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm shadow-lg backdrop-blur-sm">
+						<span class="text-amber-600 dark:text-amber-400">{modelRestrictionWarning}</span>
+						<button
+							type="button"
+							class="text-muted-foreground hover:text-foreground"
+							onclick={() => (modelRestrictionWarning = null)}
+						>
+							✕
+						</button>
 					</div>
 				</div>
-			{:else}
-				<div class="space-y-1 px-1 py-6 md:px-3 md:py-7">
-					{#each chat.messages as message, i (`${message.id}-${i}`)}
-						{@const content = getMessageContent(message as UIMessageLike)}
-						{@const parts = uiPartsToMessageParts(message.parts)}
-						{@const files = getMessageFiles(message.id)}
-						{@const meta = message.metadata as Record<string, unknown> | undefined}
-						<ChatMessage
-							role={message.role as 'user' | 'assistant'}
-							{content}
-							timestamp={meta?.createdAt as string | undefined}
-							{files}
-							{parts}
-							agent={message.role === 'assistant' ? currentAgent : undefined}
-							onConfirmationRespond={handleConfirmationRespond}
-							onInputSubmit={handleInputSubmit}
-							onSaveAsNote={message.role === 'assistant'
-								? (c) => handleSaveAsNote(message.id, c)
-								: undefined}
-							isSaved={savedMessageIds.has(message.id)}
-						/>
-					{/each}
-					{#if isThinking || currentToolName}
-						<ThinkingIndicator {isThinking} {currentToolName} agent={currentAgent} />
-					{/if}
-				</div>
 			{/if}
-		</div>
 
-		{#if modelRestrictionWarning}
-			<div class="absolute top-20 right-0 left-0 z-40 flex justify-center px-4">
-				<div class="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-sm shadow-lg backdrop-blur-sm">
-					<span class="text-amber-600 dark:text-amber-400">{modelRestrictionWarning}</span>
-					<button type="button" class="text-muted-foreground hover:text-foreground" onclick={() => (modelRestrictionWarning = null)}>✕</button>
-				</div>
+			<div class="shrink-0 border-t border-[#f5f7fa] px-4 pb-4 pt-3 md:px-5 md:pb-5 md:pt-4">
+				<ChatInput
+					onSubmit={handleSend}
+					isStreaming={isStreaming || hasPendingToolCalls}
+					onStop={stopStreaming}
+					placeholder={composerPlaceholder}
+					threadId={data?.thread?.id}
+					agents={data.agents}
+					selectedAgentId={currentAgentId}
+					onAgentChange={handleAgentChange}
+					hideAgentSelector={hasMessages}
+					availableModels={data.availableModels}
+					selectedModelId={currentModelId}
+					onModelChange={handleModelChange}
+					{allowedModelIds}
+					pinnedModelInfo={currentPinnedModelInfo}
+					{creditBalance}
+					{hasSubscription}
+					floating={false}
+				/>
 			</div>
-		{/if}
-
-		<div class="shrink-0 border-t border-[#f5f7fa] px-4 pb-4 pt-3 md:px-5 md:pb-5 md:pt-4">
-			<ChatInput
-				onSubmit={handleSend}
-				isStreaming={isStreaming || hasPendingToolCalls}
-				onStop={stopStreaming}
-				placeholder={composerPlaceholder}
-				threadId={data?.thread?.id}
-				agents={data.agents}
-				selectedAgentId={currentAgentId}
-				onAgentChange={handleAgentChange}
-				hideAgentSelector={hasMessages}
-				availableModels={data.availableModels}
-				selectedModelId={currentModelId}
-				onModelChange={handleModelChange}
-				{allowedModelIds}
-				pinnedModelInfo={currentPinnedModelInfo}
-				{creditBalance}
-				{hasSubscription}
-				floating={false}
-			/>
-		</div>
-	</div>
+		{/snippet}
+	</ConversationPanel>
 </div>
