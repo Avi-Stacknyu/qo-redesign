@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ThemeSelector from '$lib/components/ThemeSelector.svelte';
 	import WidgetGrid from '$lib/components/dashboard/WidgetGrid.svelte';
 	import WidgetCatalog from '$lib/components/dashboard/WidgetCatalog.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
@@ -10,7 +11,7 @@
 	import { cn } from '$lib/utils';
 	import type { DashboardWidgetRow } from '@repo/db/types';
 	import type { DataSourceCatalogItem } from '@repo/shared/types';
-	import { Check, LayoutGrid, Loader2, Plus, Settings2 } from '@lucide/svelte';
+	import { Check, LayoutGrid, Loader2, Palette, Plus, Settings2 } from '@lucide/svelte';
 	import { setContext } from 'svelte';
 	import type { Snippet } from 'svelte';
 
@@ -69,6 +70,7 @@
 	let createDialogOpen = $state(false);
 	let newDashboardName = $state('');
 	let creatingDashboard = $state(false);
+	let themeOpen = $state(false);
 
 	const activeProfileId = $derived(dashboard.activeProfileId);
 
@@ -179,6 +181,19 @@
 					>
 						<Settings2 class="h-5 w-5" />
 					</Button>
+					<ThemeSelector bind:open={themeOpen}>
+						{#snippet trigger()}
+							<Button
+								variant="outline"
+								size="icon-lg"
+								class="rounded-2xl border border-border/60 bg-card/85 text-muted-foreground shadow-xs hover:bg-muted hover:text-foreground"
+								aria-label="Open theme picker"
+								title="Open theme picker"
+							>
+								<Palette class="h-5 w-5" />
+							</Button>
+						{/snippet}
+					</ThemeSelector>
 				{/if}
 			</div>
 		</div>
