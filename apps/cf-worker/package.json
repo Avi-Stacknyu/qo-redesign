@@ -1,0 +1,44 @@
+{
+	"name": "quant-orion-worker",
+	"version": "0.0.12",
+	"private": true,
+	"scripts": {
+		"deploy": "wrangler deploy",
+		"dev": "IS_DEV=true CLOUDFLARE_INCLUDE_PROCESS_ENV=true wrangler dev",
+		"start": "IS_DEV=true CLOUDFLARE_INCLUDE_PROCESS_ENV=true wrangler dev",
+		"types": "wrangler types",
+		"check": "tsc --noEmit",
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"test:workers": "vitest run --config vitest.workers.config.mts",
+		"lint": "prettier --write ."
+	},
+	"dependencies": {
+		"@ai-sdk/anthropic": "^3.0.74",
+		"@ai-sdk/google": "^3.0.67",
+		"@ai-sdk/openai": "^3.0.58",
+		"@ai-sdk/xai": "^3.0.87",
+		"@repo/db": "workspace:*",
+		"@repo/shared": "workspace:*",
+		"@xyflow/svelte": "^1.5.2",
+		"agents": "^0.12.2",
+		"ai": "^6.0.174",
+		"chunkdown": "^3.2.1",
+		"drizzle-orm": "^0.45.2",
+		"papaparse": "^5.5.3",
+		"pg": "^8.20.0",
+		"posthog-node": "^5.33.0",
+		"stripe": "^22.0.1",
+		"workers-ai-provider": "^3.1.13",
+		"zod": "^4.3.6"
+	},
+	"devDependencies": {
+		"@cloudflare/vitest-pool-workers": "^0.15.2",
+		"@cloudflare/workers-types": "^4.20260502.1",
+		"@types/node": "^25.6.0",
+		"@types/papaparse": "^5.5.2",
+		"typescript": "^6.0.2",
+		"vitest": "~4.1.4",
+		"wrangler": "^4.93.0"
+	}
+}

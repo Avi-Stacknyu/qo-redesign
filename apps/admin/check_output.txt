@@ -1,0 +1,55 @@
+
+> admin@0.0.1 check /Users/meet/Developer/Core-Projects/quant-orion/apps/admin
+> svelte-kit sync && svelte-check --tsconfig ./tsconfig.json
+
+Loading svelte-check in workspace: /Users/meet/Developer/Core-Projects/quant-orion/apps/admin
+Getting Svelte diagnostics...
+
+/Users/meet/Developer/Core-Projects/quant-orion/apps/admin/src/routes/(dash)/settings/onboarding/profiles/compiler.ts:553:3
+Error: Type '{ id: string; question: string; type: string; required: boolean; }[]' is not assignable to type '{ id: string; question: string; type: "acknowledgement" | "accept_deny"; required: boolean; }[]'.
+  Type '{ id: string; question: string; type: string; required: boolean; }' is not assignable to type '{ id: string; question: string; type: "acknowledgement" | "accept_deny"; required: boolean; }'.
+    Types of property 'type' are incompatible.
+      Type 'string' is not assignable to type '"acknowledgement" | "accept_deny"'. 
+		enabled: parseBooleanValue(values.enabled, items.length > 0),
+		items
+	};
+
+/Users/meet/Developer/Core-Projects/quant-orion/apps/admin/src/routes/(dash)/settings/onboarding/profiles/compiler.ts:707:34
+Error: Argument of type '{ factKey: string; operator: "includes" | "in" | "exists" | "not_exists" | "eq" | "equals" | "not_equals" | "includes_any" | "neq"; value?: string | string[] | undefined; } | ({ all?: { ...; }[] | undefined; any?: { ...; }[] | undefined; } & Record<...>)' is not assignable to parameter of type '{ factKey?: string | undefined; questionId?: string | undefined; operator: string; value?: string | string[] | undefined; }'.
+  Property 'operator' is missing in type '{ all?: { operator: "includes" | "exists" | "not_exists" | "equals" | "not_equals" | "includes_any"; factKey?: string | undefined; questionId?: string | undefined; value?: string | string[] | undefined; }[] | undefined; any?: { ...; }[] | undefined; } & Record<...>' but required in type '{ factKey?: string | undefined; questionId?: string | undefined; operator: string; value?: string | string[] | undefined; }'. 
+	if ('factKey' in showWhen || 'questionId' in showWhen) {
+		const single = formatCondition(showWhen);
+		return single ? [`- show_when: ${single}`] : [];
+
+/Users/meet/Developer/Core-Projects/quant-orion/apps/admin/src/routes/(dash)/settings/onboarding/profiles/profiles.remote.ts:343:3
+Error: Type '{ question: string; type: "number" | "boolean" | "text" | "single_select" | "multi_select"; factKey: string; order: number; required: boolean; enabled: boolean; description: string | undefined; sidebarTitle: string | undefined; options: { ...; }[] | undefined; showWhen: { ...; } | undefined; group: string | undefine...' is not assignable to type '{ question: string; type: "number" | "boolean" | "text" | "single_select" | "multi_select"; factKey: string; order: number; required: boolean; description?: string | undefined; sidebarTitle?: string | undefined; enabled?: boolean | undefined; options?: { ...; }[] | undefined; showWhen?: { ...; } | ... 1 more ... | u...'.
+  Type '{ question: string; type: "single_select" | "multi_select" | "text" | "number" | "boolean"; factKey: string; order: number; required: boolean; enabled: boolean; ... 4 more ...; group: string | undefined; }' is not assignable to type '{ question: string; type: "number" | "boolean" | "text" | "single_select" | "multi_select"; factKey: string; order: number; required: boolean; description?: string | undefined; sidebarTitle?: string | undefined; enabled?: boolean | undefined; options?: { ...; }[] | undefined; showWhen?: { ...; } | ... 1 more ... | u...'.
+    Types of property 'showWhen' are incompatible.
+      Type '{ all?: { factKey?: string | undefined; questionId?: string | undefined; operator: string; value?: string | string[] | undefined; }[] | undefined; any?: { factKey?: string | undefined; questionId?: string | undefined; operator: string; value?: string | ... 1 more ... | undefined; }[] | undefined; } | undefined' is not assignable to type '{ factKey: string; operator: "includes" | "in" | "exists" | "not_exists" | "eq" | "equals" | "not_equals" | "includes_any" | "neq"; value?: string | string[] | undefined; } | { all?: { ...; }[] | undefined; any?: { ...; }[] | undefined; } | undefined'.
+        Type '{ all?: { factKey?: string | undefined; questionId?: string | undefined; operator: string; value?: string | string[] | undefined; }[] | undefined; any?: { factKey?: string | undefined; questionId?: string | undefined; operator: string; value?: string | ... 1 more ... | undefined; }[] | undefined; }' is not assignable to type '{ factKey: string; operator: "includes" | "in" | "exists" | "not_exists" | "eq" | "equals" | "not_equals" | "includes_any" | "neq"; value?: string | string[] | undefined; } | { all?: { ...; }[] | undefined; any?: { ...; }[] | undefined; } | undefined'.
+          Type '{ all?: { factKey?: string | undefined; questionId?: string | undefined; operator: string; value?: string | string[] | undefined; }[] | undefined; any?: { factKey?: string | undefined; questionId?: string | undefined; operator: string; value?: string | ... 1 more ... | undefined; }[] | undefined; }' is not assignable to type '{ all?: { operator: "includes" | "exists" | "not_exists" | "equals" | "not_equals" | "includes_any"; factKey?: string | undefined; questionId?: string | undefined; value?: string | string[] | undefined; }[] | undefined; any?: { ...; }[] | undefined; }'.
+            Types of property 'all' are incompatible.
+              Type '{ factKey?: string | undefined; questionId?: string | undefined; operator: string; value?: string | string[] | undefined; }[] | undefined' is not assignable to type '{ operator: "includes" | "exists" | "not_exists" | "equals" | "not_equals" | "includes_any"; factKey?: string | undefined; questionId?: string | undefined; value?: string | string[] | undefined; }[] | undefined'.
+                Type '{ factKey?: string | undefined; questionId?: string | undefined; operator: string; value?: string | string[] | undefined; }[]' is not assignable to type '{ operator: "includes" | "exists" | "not_exists" | "equals" | "not_equals" | "includes_any"; factKey?: string | undefined; questionId?: string | undefined; value?: string | string[] | undefined; }[]'.
+                  Type '{ factKey?: string | undefined; questionId?: string | undefined; operator: string; value?: string | string[] | undefined; }' is not assignable to type '{ operator: "includes" | "exists" | "not_exists" | "equals" | "not_equals" | "includes_any"; factKey?: string | undefined; questionId?: string | undefined; value?: string | string[] | undefined; }'.
+                    Types of property 'operator' are incompatible.
+                      Type 'string' is not assignable to type '"includes" | "exists" | "not_exists" | "equals" | "not_equals" | "includes_any"'. 
+		promptTemplate,
+		questions: questions.map((question, index) => ({
+			question: question.question ?? 'Untitled question',
+
+/Users/meet/Developer/Core-Projects/quant-orion/apps/admin/src/routes/(dash)/settings/onboarding/profiles/profiles.remote.ts:594:48
+Error: No overload matches this call.
+  Overload 1 of 2, '(value: { id: string | SQL<unknown> | Placeholder<string, any>; name: string | SQL<unknown> | Placeholder<string, any>; key: string | SQL<unknown> | Placeholder<string, any>; ... 21 more ...; aiFallbackQuestions?: unknown; }): PgInsertBase<...>', gave the following error.
+    Argument of type '{ created: string; id: string; }' is not assignable to parameter of type '{ id: string | SQL<unknown> | Placeholder<string, any>; name: string | SQL<unknown> | Placeholder<string, any>; key: string | SQL<unknown> | Placeholder<string, any>; ... 21 more ...; aiFallbackQuestions?: unknown; }'.
+      Type '{ created: string; id: string; }' is missing the following properties from type '{ id: string | SQL<unknown> | Placeholder<string, any>; name: string | SQL<unknown> | Placeholder<string, any>; key: string | SQL<unknown> | Placeholder<string, any>; ... 21 more ...; aiFallbackQuestions?: unknown; }': name, key
+  Overload 2 of 2, '(values: { id: string | SQL<unknown> | Placeholder<string, any>; name: string | SQL<unknown> | Placeholder<string, any>; key: string | SQL<unknown> | Placeholder<string, any>; ... 21 more ...; aiFallbackQuestions?: unknown; }[]): PgInsertBase<...>', gave the following error.
+    Object literal may only specify known properties, and 'created' does not exist in type '{ id: string | SQL<unknown> | Placeholder<string, any>; name: string | SQL<unknown> | Placeholder<string, any>; key: string | SQL<unknown> | Placeholder<string, any>; ... 21 more ...; aiFallbackQuestions?: unknown; }[]'. 
+				} else {
+					await tx.insert(configOnboardingProfiles).values({
+						id: profileId,
+
+====================================
+svelte-check found 4 errors and 0 warnings in 2 files
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  admin@0.0.1 check: `svelte-kit sync && svelte-check --tsconfig ./tsconfig.json`
+Exit status 1

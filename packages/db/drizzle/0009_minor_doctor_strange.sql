@@ -1,0 +1,1 @@
+ALTER TABLE "config_onboarding_profiles" ADD COLUMN "disclosures" jsonb;

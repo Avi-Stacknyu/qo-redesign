@@ -1,0 +1,432 @@
+<!--
+  ChartRenderer - Renders AI-generated charts using LayerChart with shadcn styling
+  Supports: area, bar, line, pie, radar, radial chart types
+-->
+<script lang="ts">
+	import * as Card from '$ui/card';
+	import * as Chart from '$ui/chart';
+	import { Area, AreaChart, BarChart, PieChart, ArcChart, LineChart } from 'layerchart';
+	import { scaleBand } from 'd3-scale';
+	import { curveNatural, curveLinearClosed } from 'd3-shape';
+	import { cubicInOut } from 'svelte/easing';
+	import type {
+		ShadcnChartOutput,
+		ChartSeries,
+		CategoryDataPoint,
+		PieDataPoint
+	} from '../../types/generative-ui';
+
+	interface Props {
+		output: ShadcnChartOutput;
+	}
+
+	let { output }: Props = $props();
+
+	// Color palette for pie/radial charts - these get passed to ChartStyle which generates CSS vars
+	const chartColors = [
+		'var(--chart-1)',
+		'var(--chart-2)',
+		'var(--chart-3)',
+		'var(--chart-4)',
+		'var(--chart-5)'
+	];
+
+	// Auto-detect xKey if not provided - look for common category field names
+	let detectedXKey = $derived.by(() => {
+		if (output.config?.xKey) return output.config.xKey;
+		if (!output.data || output.data.length === 0) return 'label';
+
+		const firstItem = output.data[0] as Record<string, unknown>;
+		const keys = Object.keys(firstItem);
+
+		// Priority order for x-axis key detection
+		const categoryKeyNames = ['category', 'label', 'name', 'date', 'month', 'year', 'x', 'time'];
+		for (const name of categoryKeyNames) {
+			if (keys.includes(name) && typeof firstItem[name] === 'string') {
+				return name;
+			}
+		}
+
+		// Fallback: first string field
+		for (const key of keys) {
+			if (typeof firstItem[key] === 'string') return key;
+		}
+
+		return 'label';
+	});
+
+	// Auto-detect value key for pie charts
+	let detectedValueKey = $derived.by(() => {
+		if (!output.data || output.data.length === 0) return 'value';
+		const firstItem = output.data[0] as Record<string, unknown>;
+		const keys = Object.keys(firstItem);
+
+		// Priority order for value key detection
+		const valueKeyNames = ['value', 'count', 'amount', 'total', 'visitors', 'sales'];
+		for (const name of valueKeyNames) {
+			if (keys.includes(name) && typeof firstItem[name] === 'number') {
+				return name;
+			}
+		}
+
+		// Fallback: first numeric field that's not color
+		for (const key of keys) {
+			if (typeof firstItem[key] === 'number' && key !== 'color') return key;
+		}
+
+		return 'value';
+	});
+
+	// Auto-detect series if not provided - find numeric fields that aren't the x-axis
+	let detectedSeries = $derived.by(() => {
+		if (output.series && output.series.length > 0) return output.series;
+		if (!output.data || output.data.length === 0) return [];
+
+		const firstItem = output.data[0] as Record<string, unknown>;
+		const xKeyVal = detectedXKey;
+		const numericKeys = Object.keys(firstItem).filter(
+			(k) => k !== xKeyVal && typeof firstItem[k] === 'number' && k !== 'color'
+		);
+
+		return numericKeys.map((key, i) => ({
+			key,
+			label: key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' '),
+			color: `var(--chart-${(i % 5) + 1})`
+		}));
+	});
+
+	// Helper to create a safe CSS key from a string
+	function toSafeKey(str: string, index: number): string {
+		// Use index-based keys for reliability with special characters
+		return `item-${index}`;
+	}
+
+	// Build chart config from series for shadcn chart context
+	let chartConfig = $derived.by(() => {
+		const series = detectedSeries;
+		const config: Chart.ChartConfig = {};
+
+		// For pie/radial charts, build config from data items
+		if (output.chartType === 'pie' || output.chartType === 'radial') {
+			const nameKey = detectedXKey;
+			(output.data as PieDataPoint[]).forEach((item, i) => {
+				const record = item as unknown as Record<string, unknown>;
+				const key = toSafeKey(String(record[nameKey] || ''), i);
+				config[key] = {
+					label: String(record[nameKey] || `Item ${i + 1}`),
+					color: chartColors[i % chartColors.length]
+				};
+			});
+			return config;
+		}
+
+		// For other charts, build from series
+		series.forEach((s: ChartSeries, i: number) => {
+			config[s.key] = {
+				label: s.label,
+				color: s.color || `var(--chart-${(i % 5) + 1})`
+			};
+		});
+		return config;
+	});
+
+	let seriesKeys = $derived(detectedSeries.map((s: ChartSeries) => s.key));
+	let seriesConfig = $derived(
+		detectedSeries.map((s: ChartSeries, i: number) => ({
+			key: s.key,
+			label: s.label,
+			color: s.color || `var(--chart-${(i % 5) + 1})`
+		}))
+	);
+
+	// Prepare pie chart data with colors - add a color field that references the CSS var
+	let pieChartData = $derived.by(() => {
+		const nameKey = detectedXKey;
+		return (output.data as PieDataPoint[]).map((item, i) => {
+			const record = item as unknown as Record<string, unknown>;
+			// Use index-based key to match the chart config
+			const colorKey = toSafeKey(String(record[nameKey] || ''), i);
+			return {
+				...record,
+				// The color references the CSS variable generated by ChartStyle
+				color: `var(--color-${colorKey})`
+			};
+		});
+	});
+
+	// Compute max value for radial charts
+	let radialMaxValue = $derived.by(() => {
+		const valueKey = detectedValueKey;
+		return Math.max(
+			...(output.data as PieDataPoint[]).map((d) => {
+				const record = d as unknown as Record<string, unknown>;
+				return Number(record[valueKey]) || 0;
+			})
+		);
+	});
+
+	// Build radial series for ArcChart
+	let radialSeries = $derived.by(() => {
+		const nameKey = detectedXKey;
+		const valueKey = detectedValueKey;
+		return (output.data as PieDataPoint[]).map((item, i) => {
+			const record = item as unknown as Record<string, unknown>;
+			return {
+				key: String(record[nameKey] || `item-${i}`),
+				color: chartColors[i % chartColors.length],
+				data: [{ [valueKey]: record[valueKey], [nameKey]: record[nameKey] }]
+			};
+		});
+	});
+
+	// Compute data domain for y-axis
+	let yMax = $derived(
+		Math.max(
+			...(output.data as CategoryDataPoint[]).flatMap((d) =>
+				seriesKeys.length > 0
+					? seriesKeys.map((k: string) => Number(d[k]) || 0)
+					: Object.values(d)
+							.filter((v) => typeof v === 'number')
+							.map((v) => Number(v))
+			)
+		) * 1.1
+	);
+
+	let xKey = $derived(detectedXKey);
+	let valueKey = $derived(detectedValueKey);
+	let xDomain = $derived((output.data as CategoryDataPoint[]).map((d) => String(d[xKey])));
+
+	// Calculate tick interval to avoid overcrowding x-axis labels
+	let xTickInterval = $derived.by(() => {
+		const dataLength = output.data?.length || 0;
+		if (dataLength <= 6) return 1; // Show all labels
+		if (dataLength <= 12) return 2; // Show every 2nd label
+		if (dataLength <= 20) return 3; // Show every 3rd label
+		if (dataLength <= 30) return 5; // Show every 5th label
+		return Math.ceil(dataLength / 6); // Aim for ~6 labels max
+	});
+
+	// Get filtered tick values for x-axis
+	let xTicks = $derived.by(() => {
+		const interval = xTickInterval;
+		return xDomain.filter((_, i) => i % interval === 0);
+	});
+
+	// Format x-axis label with intelligent truncation
+	function formatXLabel(d: string): string {
+		// Truncate long labels — keep enough for context
+		if (d.length > 16) return d.slice(0, 14) + '…';
+		return d;
+	}
+
+	// Format y-axis values with smart abbreviation
+	function formatYLabel(value: number): string {
+		if (value === 0) return '0';
+		const abs = Math.abs(value);
+		const sign = value < 0 ? '-' : '';
+		if (abs >= 1_000_000_000)
+			return `${sign}${(abs / 1_000_000_000).toFixed(abs % 1_000_000_000 === 0 ? 0 : 1)}B`;
+		if (abs >= 1_000_000)
+			return `${sign}${(abs / 1_000_000).toFixed(abs % 1_000_000 === 0 ? 0 : 1)}M`;
+		if (abs >= 10_000) return `${sign}${(abs / 1_000).toFixed(abs % 1_000 === 0 ? 0 : 1)}K`;
+		if (abs >= 1_000) return `${sign}${(abs / 1_000).toFixed(1)}K`;
+		if (Number.isInteger(value)) return value.toString();
+		return value.toFixed(1);
+	}
+</script>
+
+<Card.Root class="w-full">
+	<Card.Header class="px-5 pb-2 sm:px-8">
+		<Card.Title class="text-base">{output.title}</Card.Title>
+		{#if output.description}
+			<Card.Description>{output.description}</Card.Description>
+		{/if}
+	</Card.Header>
+	<Card.Content class="px-5 pt-4 sm:px-8 sm:pt-6">
+		{#if output.chartType === 'pie'}
+			<!-- Pie Chart using native LayerChart PieChart -->
+			<Chart.Container config={chartConfig} class="mx-auto aspect-square max-h-[250px]">
+				<PieChart
+					data={pieChartData}
+					key={xKey}
+					value={valueKey}
+					cRange={pieChartData.map((d) => d.color)}
+					innerRadius={output.config?.donut ? 60 : 0}
+					padding={28}
+					legend={output.config?.showLegend !== false}
+					props={{
+						pie: {
+							motion: 'tween'
+						},
+						arc: {
+							class: 'stroke-background stroke-2'
+						}
+					}}
+				>
+					{#snippet tooltip()}
+						<Chart.Tooltip hideLabel />
+					{/snippet}
+				</PieChart>
+			</Chart.Container>
+		{:else if output.chartType === 'radial'}
+			<!-- Radial Chart using native LayerChart ArcChart -->
+			<Chart.Container config={chartConfig} class="mx-auto aspect-square max-h-[250px]">
+				<ArcChart
+					label={xKey}
+					value={valueKey}
+					outerRadius={-17}
+					innerRadius={-12.5}
+					padding={20}
+					range={[90, -270]}
+					maxValue={radialMaxValue}
+					series={radialSeries}
+					props={{
+						arc: { track: { fill: 'var(--muted)' }, motion: 'tween' },
+						tooltip: { context: { hideDelay: 350 } }
+					}}
+				>
+					{#snippet tooltip()}
+						<Chart.Tooltip hideLabel nameKey={xKey} />
+					{/snippet}
+				</ArcChart>
+			</Chart.Container>
+		{:else if output.chartType === 'radar'}
+			<!-- Radar Chart using native LayerChart LineChart with radial -->
+			<Chart.Container config={chartConfig} class="mx-auto aspect-square max-h-[250px]">
+				<LineChart
+					data={output.data as CategoryDataPoint[]}
+					series={seriesConfig}
+					radial
+					x={xKey}
+					xScale={scaleBand()}
+					padding={12}
+					props={{
+						spline: {
+							curve: curveLinearClosed,
+							fill: seriesConfig[0]?.color || 'var(--chart-1)',
+							fillOpacity: 0.6,
+							stroke: '0',
+							motion: 'tween'
+						},
+						xAxis: {
+							tickLength: 0
+						},
+						yAxis: {
+							format: () => ''
+						},
+						grid: {
+							radialY: 'linear'
+						},
+						tooltip: {
+							context: {
+								mode: 'voronoi'
+							}
+						},
+						highlight: {
+							lines: false
+						}
+					}}
+				>
+					{#snippet tooltip()}
+						<Chart.Tooltip />
+					{/snippet}
+				</LineChart>
+			</Chart.Container>
+		{:else}
+			<!-- LayerChart-based charts (bar, area, line) -->
+			<Chart.Container config={chartConfig} class="h-[250px] w-full">
+				{#if output.chartType === 'bar'}
+					<!-- Bar Chart -->
+					<BarChart
+						data={output.data as CategoryDataPoint[]}
+						x={xKey}
+						xScale={scaleBand().padding(0.25)}
+						{xDomain}
+						yDomain={[0, yMax]}
+						yNice
+						axis="x"
+						series={seriesConfig}
+						seriesLayout={seriesConfig.length > 1 ? 'group' : undefined}
+						x1Scale={seriesConfig.length > 1 ? scaleBand().paddingInner(0.2) : undefined}
+						rule={false}
+						props={{
+							xAxis: {
+								ticks: xTicks,
+								format: formatXLabel
+							},
+							yAxis: { format: (d: number) => formatYLabel(d) },
+							bars: {
+								radius: 4,
+								rounded: 'all',
+								stroke: 'none',
+								motion: {
+									y: { type: 'tween', duration: 500, easing: cubicInOut },
+									height: { type: 'tween', duration: 500, easing: cubicInOut }
+								}
+							},
+							highlight: { area: { fill: 'none' } }
+						}}
+					>
+						{#snippet tooltip()}
+							<Chart.Tooltip indicator="dashed" />
+						{/snippet}
+					</BarChart>
+				{:else if output.chartType === 'area' || output.chartType === 'line'}
+					<!-- Area/Line Chart -->
+					<AreaChart
+						data={output.data as CategoryDataPoint[]}
+						x={xKey}
+						xScale={scaleBand()}
+						{xDomain}
+						yDomain={[0, yMax]}
+						yNice
+						series={seriesConfig}
+						props={{
+							area: {
+								curve: curveNatural,
+								'fill-opacity': output.chartType === 'area' ? 0.4 : 0,
+								line: { class: 'stroke-2' }
+							},
+							xAxis: {
+								ticks: xTicks,
+								format: formatXLabel
+							},
+							yAxis: { format: (d: number) => formatYLabel(d) }
+						}}
+					>
+						{#snippet marks({ series, getAreaProps })}
+							<defs>
+								{#each seriesConfig as s, i}
+									<linearGradient id="fill-{s.key}" x1="0" y1="0" x2="0" y2="1">
+										<stop offset="5%" stop-color="var(--color-{s.key})" stop-opacity={1.0} />
+										<stop offset="95%" stop-color="var(--color-{s.key})" stop-opacity={0.1} />
+									</linearGradient>
+								{/each}
+							</defs>
+							{#each series as s, i (s.key)}
+								<Area
+									{...getAreaProps(s, i)}
+									fill={output.chartType === 'area' ? `url(#fill-${s.key})` : 'transparent'}
+									line={{ class: 'stroke-2', stroke: `var(--color-${s.key})` }}
+								/>
+							{/each}
+						{/snippet}
+						{#snippet tooltip()}
+							<Chart.Tooltip indicator="line" />
+						{/snippet}
+					</AreaChart>
+				{:else}
+					<!-- Fallback -->
+					<div class="flex h-full items-center justify-center text-muted-foreground">
+						Chart type "{output.chartType}" visualization
+					</div>
+				{/if}
+			</Chart.Container>
+		{/if}
+	</Card.Content>
+	{#if output.footer}
+		<Card.Footer class="text-sm text-muted-foreground">
+			{output.footer}
+		</Card.Footer>
+	{/if}
+</Card.Root>

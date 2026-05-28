@@ -1,0 +1,8 @@
+{
+  "version": "2",
+  "phaseApp": "Quant-orion",
+  "appId": "80d1f970-caca-45d5-b6ca-1559fd2b3090",
+  "defaultEnv": "Development",
+  "envId": "287268c9-db29-415f-80b2-a8d88b0a5c92",
+  "monorepoSupport": true
+}

@@ -1,0 +1,120 @@
+{
+	"name": "quant-orion-worker",
+	"account_id": "7e5e0dcd85536fc66d734e42bb97b876",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-05-19",
+	"compatibility_flags": ["nodejs_compat", "nodejs_compat_populate_process_env"],
+
+	// "placement": {
+	// 	"region": "aws:us-west-2" // Explicit cloud region to run your Worker closest to - e.g. "gcp:us-east4" or "aws:us-east-1"
+	// },
+
+	"send_email": [
+		{
+			"name": "SEND_EMAIL",
+			"remote": true
+		}
+	],
+
+	"durable_objects": {
+		"bindings": [
+			{
+				"name": "QuantPMAgent",
+				"class_name": "QuantPMAgent"
+			},
+			{
+				"name": "OnboardingSessionDO",
+				"class_name": "OnboardingSessionDO"
+			}
+		]
+	},
+	"migrations": [
+		{
+			"tag": "v1",
+			"new_sqlite_classes": ["UserMemoryGraph", "QuantPMAgent"]
+		},
+		{
+			"tag": "v2",
+			"new_sqlite_classes": ["OnboardingSessionDO"]
+		},
+		{
+			"tag": "v3",
+			"new_sqlite_classes": ["UserContextDO"]
+		},
+		{
+			"tag": "v4",
+			"deleted_classes": ["UserContextDO"]
+		},
+		{
+			"tag": "v5",
+			"deleted_classes": ["UserMemoryGraph"]
+		}
+	],
+	"services": [
+		{
+			"binding": "FILE_SERVICE",
+			"service": "quant-orion-worker",
+			"entrypoint": "FileServiceEntrypoint"
+		}
+	],
+	"vectorize": [
+		{
+			"binding": "DOCUMENT_CHUNKS",
+			"index_name": "document-chunks",
+			"remote": true
+		},
+		{
+			"binding": "GRAPH_NODES",
+			"index_name": "graph-nodes",
+			"remote": true
+		}
+	],
+	"queues": {
+		"producers": [
+			{
+				"binding": "DOC_PROCESSING_QUEUE",
+				"queue": "doc-processing"
+			}
+		],
+		"consumers": [
+			{
+				"queue": "doc-processing",
+				"max_batch_size": 1,
+				"max_concurrency": 50,
+				"max_retries": 2,
+				"dead_letter_queue": "doc-processing-dlq"
+			}
+		]
+	},
+	"r2_buckets": [
+		{
+			"binding": "DOCUMENTS_BUCKET",
+			"bucket_name": "quant-pm-documents",
+			"remote": true
+		}
+	],
+	"ai": {
+		"binding": "AI"
+	},
+	"triggers": {
+		"crons": ["*/15 * * * *", "0 6 * * *"]
+	},
+
+	"hyperdrive": [
+		{
+			"binding": "HYPERDRIVE",
+			"id": "2a51dc534fbc42848ba3898c84078c75",
+			"localConnectionString": "postgresql://neondb_owner:npg_Bl7iGNMEDxV8@ep-flat-frog-akfvlvfa.c-3.us-west-2.aws.neon.tech/main?sslmode=require&channel_binding=require"
+		}
+	],
+
+	"observability": {
+		"logs": {
+			"enabled": true,
+			"invocation_logs": true
+		},
+		"traces": {
+			"enabled": true
+		}
+	}
+}

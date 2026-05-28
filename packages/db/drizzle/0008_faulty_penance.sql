@@ -1,0 +1,1 @@
+ALTER TABLE "config_onboarding_profiles" ADD COLUMN "ai_fallback_questions" jsonb;

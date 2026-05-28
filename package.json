@@ -1,0 +1,39 @@
+{
+  "name": "quantpm-monorepo",
+  "type": "module",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "format": "prettier --write .",
+    "check-types": "turbo run check-types",
+    "dev1": "turbo run dev --parallel --filter web --filter quant-orion-worker dev "
+  },
+  "devDependencies": {
+    "prettier": "^3.8.3",
+    "prettier-plugin-svelte": "^3.5.1",
+    "tsx": "^4.20.6",
+    "turbo": "^2.9.6"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "@tailwindcss/oxide"
+    ],
+    "overrides": {
+      "drizzle-orm": "0.45.2"
+    }
+  },
+  "packageManager": "pnpm@10.20.0",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1033.0",
+    "@repo/db": "workspace:*",
+    "drizzle-orm": "^0.45.2"
+  }
+}
