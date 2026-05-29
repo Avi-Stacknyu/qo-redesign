@@ -390,8 +390,7 @@ export const ensureDefaultProfile = query(async () => {
       widget_type: 'bank-accounts',
       widget_title: 'Bank Accounts',
       position: { order: 7, size: 'md' }
-    },
-    { widget_type: 'big-news', widget_title: 'Top Stories', position: { order: 8, size: 'lg' } }
+    }
   ];
 
   await db.insert(userWidgetInstances).values(

@@ -106,13 +106,13 @@
 		<div class="pointer-events-none absolute inset-0 bg-linear-to-br from-white via-white to-primary/4 opacity-90"></div>
 
 		{#if showHeader}
-			<div class="relative z-10 flex shrink-0 items-center justify-between gap-3 px-5 pb-3 pt-5">
+			<div class="relative z-10 flex shrink-0 items-center justify-between gap-3 px-5">
 
 				<div class="flex min-w-0 items-center gap-2.5">
 					{#if editMode}
 						<GripVertical class="size-4 shrink-0 cursor-grab text-[#98A2B3] active:cursor-grabbing" />
 					{/if}
-					<span class="size-2 shrink-0 rounded-full bg-(--widget-tint) shadow-[0_0_10px_color-mix(in_oklch,var(--widget-tint),transparent_30%)]"></span>
+					
 					<h3 class="truncate text-xl font-semibold tracking-[-0.02em] text-[#1F2937] md:text-2xl">
 						{displayTitle}
 					</h3>
@@ -200,7 +200,7 @@
 			</div>
 		{/if}
 
-		<div class="relative z-10 flex-1 overflow-hidden px-5 pb-5 text-card-foreground">
+		<div class="relative z-10 flex-1 overflow-hidden px-5  text-card-foreground">
 			{#if children}
 				{@render children()}
 			{:else}

@@ -38,9 +38,7 @@
 			result = result.filter((todo) => todo.category === resolvedConfig.category);
 		}
 
-		if (resolvedConfig.filter === 'active') {
-			result = result.filter((todo) => todo.status !== 'completed' && todo.status !== 'cancelled');
-		} else if (resolvedConfig.filter === 'done') {
+		if (resolvedConfig.filter === 'done') {
 			result = result.filter((todo) => todo.status === 'completed');
 		}
 
@@ -86,7 +84,7 @@
 		try {
 			await toggleTodoStatus({ todoId: todo.id, status: newStatus });
 		} catch {
-			/* error surfaced through query state */
+			/* error propagated via query.error */
 		}
 	}
 
@@ -118,22 +116,22 @@
 {:else if todos.error}
 	<WidgetError message={todos.error?.message ?? 'Failed to load todos'} onRetry={() => loadTodos().refresh()} />
 {:else if filtered.length === 0 && !showInput}
-	<div class="flex min-h-45 flex-col items-center justify-center gap-3 rounded-3xl border border-dashed border-slate-200">
-		<ListChecks class="size-7 text-slate-300" />
-		<p class="text-sm font-medium text-slate-400">No todos available</p>
-		<Button variant="ghost" class="rounded-xl text-sm text-[#83899F] hover:bg-[#F6F6F6]" onclick={() => (showInput = true)}>
-			<Plus class="size-4" />
+	<div class="flex min-h-32 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-slate-200">
+		<ListChecks class="size-6 text-slate-300" />
+		<p class="text-xs font-medium text-slate-400">No todos available</p>
+		<Button variant="ghost" class="h-7 rounded-lg px-2 text-xs text-[#83899F] hover:bg-[#F6F6F6]" onclick={() => (showInput = true)}>
+			<Plus class="size-3" />
 			Add task
 		</Button>
 	</div>
 {:else}
-	<div class="flex flex-col gap-3">
+	<div class="flex flex-col gap-1.5">
 		{#if showInput}
-			<div class="flex items-center gap-2">
+			<div class="flex items-center gap-1.5">
 				<Input
 					bind:value={newTask}
 					placeholder="What needs to be done?"
-					class="flex-1 rounded-2xl border-[#F6F6F6] bg-[#F6F6F6] px-4 py-2 text-sm focus-visible:ring-0"
+					class="flex-1 rounded-xl border-[#F6F6F6] bg-[#F6F6F6] px-3 py-1.5 text-xs focus-visible:ring-0"
 					onkeydown={(event) => {
 						if (event.key === 'Enter') handleAdd();
 					}}
@@ -141,57 +139,55 @@
 				<Button
 					size="icon"
 					variant="ghost"
-					class="size-9 shrink-0 rounded-xl bg-[#F6F6F6] text-[#83899F] hover:bg-slate-200 hover:text-slate-700"
+					class="size-7 shrink-0 rounded-lg bg-[#F6F6F6] text-[#83899F] hover:bg-slate-200 hover:text-slate-700"
 					onclick={handleAdd}
 					disabled={!newTask.trim() || adding}
 				>
-					<Plus class="size-4" />
+					<Plus class="size-3.5" />
 				</Button>
 			</div>
 		{/if}
 
 		{#each filtered as todo (todo.id)}
-			<Card.Root class="group rounded-3xl border border-[#F6F6F6] bg-white p-1 shadow-none ring-0 transition-all hover:shadow-sm">
-				<Card.Content class="flex flex-col gap-3 p-3">
-					<div class="flex items-start justify-between gap-4">
-						<div class="flex items-start gap-3">
+			<Card.Root class="group rounded-2xl border border-[#F6F6F6] bg-white shadow-none ring-0 p-2 transition-all hover:shadow-sm">
+				<Card.Content class="flex flex-col gap-1 p-2">
+					<div class="flex items-center justify-between gap-2">
+						<div class="flex items-center gap-2 min-w-0">
 							<Checkbox
 								checked={todo.status === 'completed'}
 								onCheckedChange={() => handleCheck(todo)}
-								class="mt-1 rounded-full"
+								class="shrink-0 rounded-full"
 							/>
-
-							<div class="flex flex-col gap-1">
-								<p class={`text-lg leading-5 font-medium text-slate-700 ${todo.status === 'completed' ? 'text-slate-400 line-through' : ''}`}>
-									{todo.task}
-								</p>
-							</div>
+							<p class={`truncate text-base font-medium text-slate-700 ${todo.status === 'completed' ? 'text-slate-400 line-through' : ''}`}>
+								{todo.task}
+							</p>
 						</div>
 
-						<div class={`rounded-full px-4 py-1 text-xs font-semibold capitalize ${getPriorityStyles(todo.priority)}`}>
-							{todo.priority}
+						<div class="flex items-center gap-2 shrink-0">
+							<button class="size-6 rounded-md text-slate-400 opacity-0 flex items-center justify-center transition-opacity duration-200 group-hover:opacity-100 hover:bg-red-50 hover:text-red-500" onclick={() => handleDelete(todo.id)}>
+								<Trash2 class="size-3.5" />
+							</button>
+							<div class={`rounded-full px-2 py-0.5 text-xs font-semibold capitalize ${getPriorityStyles(todo.priority)}`}>
+								{todo.priority}
+							</div>
+						
 						</div>
 					</div>
 
-					<div class="flex items-center justify-between">
-						<div class="flex items-center gap-2">
+					{#if todo.dueDate || todo.category}
+						<div class="flex items-center gap-1.5 pl-6">
 							{#if todo.dueDate}
-								<div class="rounded-lg border border-[#F6F6F6] bg-[#F6F6F6] px-3 py-1 text-sm font-medium text-[#83899F]">
-									Due - {formatDueDate(todo.dueDate)}
+								<div class="rounded-md border border-[#F6F6F6] bg-[#F6F6F6] px-2 py-0.5 text-xs text-[#83899F]">
+									Due · {formatDueDate(todo.dueDate)}
 								</div>
 							{/if}
-
 							{#if todo.category}
-								<div class="rounded-2xl border border-[#F6F6F6] px-3 py-1 text-sm font-medium text-[#83899F]">
+								<div class="rounded-md border border-[#F6F6F6] px-2 py-0.5 text-xs text-[#83899F]">
 									{todo.category}
 								</div>
 							{/if}
 						</div>
-
-						<button class="size-8 rounded-lg text-slate-400 opacity-0 transition-opacity duration-200 group-hover:opacity-100 hover:bg-red-50 hover:text-red-500" onclick={() => handleDelete(todo.id)}>
-							<Trash2 class="size-4" />
-						</button>
-					</div>
+					{/if}
 				</Card.Content>
 			</Card.Root>
 		{/each}

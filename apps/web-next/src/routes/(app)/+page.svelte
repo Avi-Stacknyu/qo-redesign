@@ -82,8 +82,7 @@
 		{ type: 'profile-summary', title: 'Profile Summary', size: 'md' },
 		{ type: 'news', title: 'News Feed', size: 'md' },
 		{ type: 'note', title: 'Quick Notes', size: 'lg' },
-		{ type: 'bank-accounts', title: 'Bank Accounts', size: 'md' },
-		{ type: 'big-news', title: 'Top Stories', size: 'lg' }
+		{ type: 'bank-accounts', title: 'Bank Accounts', size: 'md' }
 	];
 
 	function normalizeWidgetType(type: string | null | undefined) {

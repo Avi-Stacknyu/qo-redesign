@@ -89,35 +89,44 @@
 			</p>
 		</div>
 
-		<div class="flex shrink-0 flex-col items-end gap-1.5">
-			<button
-				type="button"
-				onclick={handleTogglePin}
-				class={pinned
-					? 'flex h-7 w-7 items-center justify-center rounded-full bg-amber-100 text-amber-600 transition-colors hover:bg-amber-200'
-					: 'flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground'}
-				aria-label={pinned ? 'Unpin note' : 'Pin note'}
-				aria-pressed={pinned}
-				title={pinned ? 'Unpin' : 'Pin'}
-				disabled={pinning}
-			>
-				{#if pinning}
-					<Loader2 class="size-3.5 animate-spin" />
-				{:else if pinned}
-					<PinOff class="size-3.5" />
-				{:else}
-					<Pin class="size-3.5 rotate-45" />
-				{/if}
-			</button>
+	<div class="flex min-w-[72px] shrink-0 flex-col items-end justify-between self-stretch">
+	<button
+		type="button"
+		onclick={handleTogglePin}
+		class={pinned
+			? 'flex h-7 w-7 items-center justify-center rounded-full bg-amber-100 text-amber-600 transition-colors hover:bg-amber-200'
+			: 'flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground'}
+		aria-label={pinned ? 'Unpin note' : 'Pin note'}
+		aria-pressed={pinned}
+		title={pinned ? 'Unpin' : 'Pin'}
+		disabled={pinning}
+	>
+		{#if pinning}
+			<Loader2 class="size-3.5 animate-spin" />
+		{:else if pinned}
+			<PinOff class="size-3.5" />
+		{:else}
+			<Pin class="size-3.5 rotate-45" />
+		{/if}
+	</button>
 
-			{#if dateBadge}
-				<span class="text-[11px] font-medium text-muted-foreground">{dateBadge}</span>
-			{/if}
+	<div class="flex flex-col items-end gap-1">
+		{#if dateBadge}
+			<span class="text-[11px] font-medium text-muted-foreground">
+				{dateBadge}
+			</span>
+		{/if}
+
+		<div class="min-h-[20px] flex items-center">
 			{#if note.category}
-				<span class="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground font-Inter">
+				<span
+					class="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground font-Inter"
+				>
 					{note.category}
 				</span>
 			{/if}
 		</div>
+	</div>
+</div>
 	</CardContent>
 </Card>

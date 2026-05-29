@@ -64,7 +64,7 @@
 
 <Dialog.Root bind:open>
 	<Dialog.Content
-		class="max-w-4xl gap-0 overflow-hidden border-border/40 bg-background/95 p-0 shadow-2xl backdrop-blur-xl sm:rounded-2xl"
+		class="max-w-4xl! w-full gap-0 overflow-hidden border-border/40 bg-background/95 p-0 shadow-2xl backdrop-blur-xl sm:rounded-2xl"
 	>
 		{#if todoPrompt}
 			<!-- Todo Category Prompt -->

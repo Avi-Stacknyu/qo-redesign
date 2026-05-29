@@ -12,14 +12,12 @@
 		type QuickActionsConfig,
 		type RecentChatsConfig,
 		type BookmarksConfig,
-		type ProfileSummaryConfig,
-		type KnowledgeConfig
+		type ProfileSummaryConfig
 	} from '$lib/types/widgets';
 	import Calendar from './widget/Calendar.svelte';
 	import QuickActions from './widget/QuickActions.svelte';
 	import ProfileSummary from './widget/ProfileSummary.svelte';
 	import News from './widget/News.svelte';
-	import BigNews from './widget/BigNews.svelte';
 	import Todo from './widget/Todo.svelte';
 	import Reminder from './widget/Reminder.svelte';
 	import Note from './widget/ NoteSplit.svelte';
@@ -27,7 +25,6 @@
 	import ChartWidget from './widgets/ChartWidget.svelte';
 	import RecentChatsWidget from './widgets/RecentChatsWidget.svelte';
 	import BookmarksWidget from './widgets/BookmarksWidget.svelte';
-	import KnowledgeWidget from './widgets/KnowledgeWidget.svelte';
 
 	let {
 		widgets,
@@ -45,12 +42,10 @@
 
 	let sortedWidgets = $derived([...widgets].sort((a, b) => a.position.order - b.position.order));
 	let todoShowInput = $state(false);
-	let bigNewsFilter = $state('Markets');
-	const bigNewsFilters = ['Markets', 'Tech', 'Policy'];
+
 	const DEFAULT_CHART_CONFIG: ChartConfig = { chartType: 'area', dateRange: 'month' };
 	const DEFAULT_RECENT_CHATS_CONFIG: RecentChatsConfig = { limit: 5, showAgentName: true };
 	const DEFAULT_BOOKMARKS_CONFIG: BookmarksConfig = {};
-	const DEFAULT_KNOWLEDGE_CONFIG: KnowledgeConfig = { viewMode: 'card', limit: 10 };
 
 	function normalizeWidgetType(type: string | null | undefined) {
 		const normalized = (type ?? '').trim().toLowerCase();
@@ -74,11 +69,11 @@
 		if (normalized.includes('quick-action') || normalized === 'actions' || normalized.endsWith('actions')) {
 			return 'quick-actions';
 		}
-		if (normalized === 'big-news') return 'big-news';
+		if (normalized === 'big-news') return 'news';
 		if (normalized.includes('news')) return 'news';
 		if (normalized.includes('bookmark')) return 'bookmarks';
 		if (normalized.includes('profile') || normalized.includes('summary')) return 'profile-summary';
-		if (normalized.includes('knowledge') || normalized.includes('memory')) return 'knowledge';
+		if (normalized.includes('knowledge') || normalized.includes('memory')) return 'note';
 		if (normalized.includes('chat') || normalized.includes('conversation')) return 'recent-chats';
 		if (normalized.includes('bank') || normalized.includes('account') || normalized.includes('plaid')) {
 			return 'bank-accounts';
@@ -120,14 +115,10 @@
 					widget_title: widget.widget_title || 'News',
 					showAddButton: false
 				};
-			case 'big-news':
-				return {
-					widget_title: widget.widget_title || 'News',
-					showAddButton: false
-				};
 			case 'note':
 				return {
-					showHeader: false
+					widget_title: widget.widget_title || 'Knowledge',
+					showAddButton: false
 				};
 			default:
 				return {
@@ -280,9 +271,7 @@
 		{#each sortedWidgets as widget (widget.id)}
 			{@const resolvedType = normalizeWidgetType(widget.widget_type)}
 			<div
-				class="{resolvedType === 'note'
-					? 'col-span-1 md:col-span-2 lg:col-span-3 xl:col-span-4 2xl:col-span-5'
-					: colSpan(widget.position.size)} self-start transition-opacity duration-200
+				class="{colSpan(widget.position.size)} self-start transition-opacity duration-200
 					{draggedId === widget.id ? 'opacity-50' : ''}
 					{dragOverId === widget.id ? 'rounded-xl ring-2 ring-primary ring-offset-2' : ''}"
 				use:masonryItem
@@ -294,104 +283,56 @@
 				ondragend={handleDragEnd}
 				role={editMode ? 'listitem' : undefined}
 			>
-				{#if resolvedType === 'note'}
-					<Note
-						showDate={false}
-						showCategory={false}
-						notes={[
-							{
-								id: 1,
-								title: 'Quick Reminder',
-								description: 'Push latest changes before shipping the new dashboard shell.'
-							}
-						]}
-					/>
-				{:else if resolvedType === 'big-news'}
-					<WidgetCard
-						instance={{ ...widget, ...headerConfig(widget) }}
-						{editMode}
-						{onRemove}
-						{onUpdate}
-						showHeader={true}
-					>
-						{#snippet headerRight()}
-							<div class="flex items-center gap-1.5">
-								{#each bigNewsFilters as filter}
-									<Button
-										variant="ghost"
-										size="sm"
-										onclick={() => (bigNewsFilter = filter)}
-										class={
-											bigNewsFilter === filter
-												? 'rounded-full bg-[#111A2E] px-4 text-xs font-semibold text-white hover:bg-[#0A1120]'
-												: 'rounded-full bg-[#F3F6FB] px-4 text-xs font-semibold text-[#7B8794] hover:bg-[#E7EDF7] hover:text-[#25324B]'
-										}
-									>
-										{filter}
-									</Button>
-								{/each}
+				<WidgetCard
+					instance={{ ...widget, ...headerConfig(widget) }}
+					{editMode}
+					{onRemove}
+					{onUpdate}
+					showHeader={resolvedType !== 'calendar'}
+				>
+					{#snippet children()}
+						{@const cfg = widget.custom_config}
+						{@const chartCfg = { ...DEFAULT_CHART_CONFIG, ...(cfg as Partial<ChartConfig>) }}
+						{@const recentChatsCfg = {
+							...DEFAULT_RECENT_CHATS_CONFIG,
+							...(cfg as Partial<RecentChatsConfig>)
+						}}
+						{@const bookmarksCfg = {
+							...DEFAULT_BOOKMARKS_CONFIG,
+							...(cfg as Partial<BookmarksConfig>)
+						}}
+						{#if resolvedType === 'calendar'}
+							<Calendar />
+						{:else if resolvedType === 'quick-actions'}
+							<QuickActions config={cfg as QuickActionsConfig} />
+						{:else if resolvedType === 'todo'}
+							<Todo config={cfg as TodoConfig} bind:showInput={todoShowInput} />
+						{:else if resolvedType === 'reminders'}
+							<Reminder config={cfg as RemindersConfig} />
+						{:else if resolvedType === 'profile-summary'}
+							<ProfileSummary config={cfg as ProfileSummaryConfig} />
+						{:else if resolvedType === 'news'}
+							<News config={cfg as NewsConfig} />
+						{:else if resolvedType === 'bank-accounts'}
+							<PlaidWidget />
+						{:else if resolvedType === 'chart'}
+							<ChartWidget config={chartCfg} />
+						{:else if resolvedType === 'recent-chats'}
+							<RecentChatsWidget config={recentChatsCfg} />
+						{:else if resolvedType === 'bookmarks'}
+							<BookmarksWidget config={bookmarksCfg} />
+						{:else if resolvedType === 'note'}
+							<Note />
+						{:else}
+							<div class="flex min-h-40 flex-col items-center justify-center gap-2 rounded-[24px] border border-dashed border-[#D7DCE5] bg-[#F8FBFF] p-6 text-center">
+								<p class="text-sm font-medium text-[#25324B]">Unsupported widget</p>
+								<p class="text-xs leading-5 text-[#7B8794]">
+									{widget.widget_type || 'Unknown'} is in this layout, but no renderer is registered yet.
+								</p>
 							</div>
-						{/snippet}
-						{#snippet children()}
-							<BigNews config={widget.custom_config ?? {}} bind:activeFilter={bigNewsFilter} />
-						{/snippet}
-					</WidgetCard>
-				{:else}
-					<WidgetCard
-						instance={{ ...widget, ...headerConfig(widget) }}
-						{editMode}
-						{onRemove}
-						{onUpdate}
-						showHeader={resolvedType !== 'calendar'}
-					>
-						{#snippet children()}
-							{@const cfg = widget.custom_config}
-							{@const chartCfg = { ...DEFAULT_CHART_CONFIG, ...(cfg as Partial<ChartConfig>) }}
-							{@const recentChatsCfg = {
-								...DEFAULT_RECENT_CHATS_CONFIG,
-								...(cfg as Partial<RecentChatsConfig>)
-							}}
-							{@const bookmarksCfg = {
-								...DEFAULT_BOOKMARKS_CONFIG,
-								...(cfg as Partial<BookmarksConfig>)
-							}}
-							{@const knowledgeCfg = {
-								...DEFAULT_KNOWLEDGE_CONFIG,
-								...(cfg as Partial<KnowledgeConfig>)
-							}}
-							{#if resolvedType === 'calendar'}
-								<Calendar />
-							{:else if resolvedType === 'quick-actions'}
-								<QuickActions config={cfg as QuickActionsConfig} />
-							{:else if resolvedType === 'todo'}
-								<Todo config={cfg as TodoConfig} bind:showInput={todoShowInput} />
-							{:else if resolvedType === 'reminders'}
-								<Reminder config={cfg as RemindersConfig} />
-							{:else if resolvedType === 'profile-summary'}
-								<ProfileSummary config={cfg as ProfileSummaryConfig} />
-							{:else if resolvedType === 'news'}
-								<News config={cfg as NewsConfig} />
-							{:else if resolvedType === 'bank-accounts'}
-								<PlaidWidget />
-							{:else if resolvedType === 'chart'}
-								<ChartWidget config={chartCfg} />
-							{:else if resolvedType === 'recent-chats'}
-								<RecentChatsWidget config={recentChatsCfg} />
-							{:else if resolvedType === 'bookmarks'}
-								<BookmarksWidget config={bookmarksCfg} />
-							{:else if resolvedType === 'knowledge'}
-								<KnowledgeWidget config={knowledgeCfg} />
-							{:else}
-								<div class="flex min-h-40 flex-col items-center justify-center gap-2 rounded-[24px] border border-dashed border-[#D7DCE5] bg-[#F8FBFF] p-6 text-center">
-									<p class="text-sm font-medium text-[#25324B]">Unsupported widget</p>
-									<p class="text-xs leading-5 text-[#7B8794]">
-										{widget.widget_type || 'Unknown'} is in this layout, but no renderer is registered yet.
-									</p>
-								</div>
-							{/if}
-						{/snippet}
-					</WidgetCard>
-				{/if}
+						{/if}
+					{/snippet}
+				</WidgetCard>
 			</div>
 		{/each}
 	</div>

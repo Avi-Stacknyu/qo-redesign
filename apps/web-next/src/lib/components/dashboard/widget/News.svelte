@@ -49,7 +49,7 @@
 		<p class="text-sm font-medium text-slate-400">No news available</p>
 	</div>
 {:else}
-	<div class="flex flex-col gap-3">
+	<div class="flex max-h-80 flex-col gap-3 overflow-y-auto">
 		{#each items as item, i (item.link + i)}
 			<a href={item.link} target="_blank" rel="noopener noreferrer" class="block">
 				<Card.Root class="group rounded-3xl border border-[#F6F6F6] bg-white p-1 shadow-none ring-0 transition-all hover:shadow-sm">

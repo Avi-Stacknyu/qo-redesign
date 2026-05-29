@@ -2,6 +2,7 @@
   import { browser } from '$app/environment';
   import { toast } from 'svelte-sonner';
   import { format, formatDistanceToNow } from 'date-fns';
+  import { page } from '$app/state';
   import { Badge } from '$lib/components/ui/badge/index.js';
   import { Button } from '$lib/components/ui/button/index.js';
   import { Card, CardContent, CardHeader, CardTitle } from '$lib/components/ui/card/index.js';
@@ -46,7 +47,7 @@
   let activeFilter = $state('all');
   let filtersOpen = $state(false);
   let creating = $state(false);
-  let selectedNoteId = $state<string | null>(null);
+  let selectedNoteId = $state<string | null>(page.url.searchParams.get('note'));
   let copied = $state(false);
   let editing = $state(false);
   let title = $state('');
@@ -59,6 +60,14 @@
   let showTagInput = $state(false);
   let newTag = $state('');
   let saveTimer: ReturnType<typeof setTimeout> | undefined;
+
+  $effect(() => {
+    const noteId = page.url.searchParams.get('note');
+
+    if (noteId && noteId !== selectedNoteId) {
+      selectedNoteId = noteId;
+    }
+  });
 
   // Reactive queries — auto-refresh when commands call .refresh() server-side
   const notesQuery = getNotes();
