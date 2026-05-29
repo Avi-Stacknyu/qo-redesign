@@ -47,9 +47,49 @@
 	let todoShowInput = $state(false);
 	let bigNewsFilter = $state('Markets');
 	const bigNewsFilters = ['Markets', 'Tech', 'Policy'];
+	const DEFAULT_CHART_CONFIG: ChartConfig = { chartType: 'area', dateRange: 'month' };
+	const DEFAULT_RECENT_CHATS_CONFIG: RecentChatsConfig = { limit: 5, showAgentName: true };
+	const DEFAULT_BOOKMARKS_CONFIG: BookmarksConfig = {};
+	const DEFAULT_KNOWLEDGE_CONFIG: KnowledgeConfig = { viewMode: 'card', limit: 10 };
+
+	function normalizeWidgetType(type: string | null | undefined) {
+		const normalized = (type ?? '').trim().toLowerCase();
+
+		if (!normalized) return '';
+		if (normalized === 'reminder') return 'reminders';
+		if (normalized === 'plaid') return 'bank-accounts';
+		if (normalized.includes('chart') || normalized.includes('analytics') || normalized.includes('gauge')) {
+			return 'chart';
+		}
+		if (
+			normalized === 'todo' ||
+			normalized.includes('task') ||
+			normalized.includes('todo') ||
+			normalized.includes('list')
+		) {
+			return 'todo';
+		}
+		if (normalized.includes('reminder')) return 'reminders';
+		if (normalized.includes('calendar')) return 'calendar';
+		if (normalized.includes('quick-action') || normalized === 'actions' || normalized.endsWith('actions')) {
+			return 'quick-actions';
+		}
+		if (normalized === 'big-news') return 'big-news';
+		if (normalized.includes('news')) return 'news';
+		if (normalized.includes('bookmark')) return 'bookmarks';
+		if (normalized.includes('profile') || normalized.includes('summary')) return 'profile-summary';
+		if (normalized.includes('knowledge') || normalized.includes('memory')) return 'knowledge';
+		if (normalized.includes('chat') || normalized.includes('conversation')) return 'recent-chats';
+		if (normalized.includes('bank') || normalized.includes('account') || normalized.includes('plaid')) {
+			return 'bank-accounts';
+		}
+		if (normalized.includes('note')) return 'note';
+
+		return normalized;
+	}
 
 	function headerConfig(widget: UserWidgetInstanceRecord): Record<string, unknown> {
-		switch (widget.widget_type) {
+		switch (normalizeWidgetType(widget.widget_type)) {
 			case 'calendar':
 				return {
 					showHeader: false
@@ -65,7 +105,6 @@
 					showAddButton: true,
 					onAdd: () => (todoShowInput = !todoShowInput)
 				};
-			case 'reminder':
 			case 'reminders':
 				return {
 					widget_title: widget.widget_title || 'Reminders',
@@ -239,8 +278,9 @@
 		style="grid-auto-rows: {ROW_H}px; column-gap: {GAP}px;"
 	>
 		{#each sortedWidgets as widget (widget.id)}
+			{@const resolvedType = normalizeWidgetType(widget.widget_type)}
 			<div
-				class="{widget.widget_type === 'note'
+				class="{resolvedType === 'note'
 					? 'col-span-1 md:col-span-2 lg:col-span-3 xl:col-span-4 2xl:col-span-5'
 					: colSpan(widget.position.size)} self-start transition-opacity duration-200
 					{draggedId === widget.id ? 'opacity-50' : ''}
@@ -254,7 +294,7 @@
 				ondragend={handleDragEnd}
 				role={editMode ? 'listitem' : undefined}
 			>
-				{#if widget.widget_type === 'note'}
+				{#if resolvedType === 'note'}
 					<Note
 						showDate={false}
 						showCategory={false}
@@ -266,7 +306,7 @@
 							}
 						]}
 					/>
-				{:else if widget.widget_type === 'big-news'}
+				{:else if resolvedType === 'big-news'}
 					<WidgetCard
 						instance={{ ...widget, ...headerConfig(widget) }}
 						{editMode}
@@ -302,32 +342,45 @@
 						{editMode}
 						{onRemove}
 						{onUpdate}
-						showHeader={widget.widget_type !== 'calendar'}
+						showHeader={resolvedType !== 'calendar'}
 					>
 						{#snippet children()}
 							{@const cfg = widget.custom_config}
-							{#if widget.widget_type === 'calendar'}
+							{@const chartCfg = { ...DEFAULT_CHART_CONFIG, ...(cfg as Partial<ChartConfig>) }}
+							{@const recentChatsCfg = {
+								...DEFAULT_RECENT_CHATS_CONFIG,
+								...(cfg as Partial<RecentChatsConfig>)
+							}}
+							{@const bookmarksCfg = {
+								...DEFAULT_BOOKMARKS_CONFIG,
+								...(cfg as Partial<BookmarksConfig>)
+							}}
+							{@const knowledgeCfg = {
+								...DEFAULT_KNOWLEDGE_CONFIG,
+								...(cfg as Partial<KnowledgeConfig>)
+							}}
+							{#if resolvedType === 'calendar'}
 								<Calendar />
-							{:else if widget.widget_type === 'quick-actions'}
+							{:else if resolvedType === 'quick-actions'}
 								<QuickActions config={cfg as QuickActionsConfig} />
-							{:else if widget.widget_type === 'todo'}
+							{:else if resolvedType === 'todo'}
 								<Todo config={cfg as TodoConfig} bind:showInput={todoShowInput} />
-							{:else if widget.widget_type === 'reminder' || widget.widget_type === 'reminders'}
+							{:else if resolvedType === 'reminders'}
 								<Reminder config={cfg as RemindersConfig} />
-							{:else if widget.widget_type === 'profile-summary'}
+							{:else if resolvedType === 'profile-summary'}
 								<ProfileSummary config={cfg as ProfileSummaryConfig} />
-							{:else if widget.widget_type === 'news'}
+							{:else if resolvedType === 'news'}
 								<News config={cfg as NewsConfig} />
-							{:else if widget.widget_type === 'bank-accounts' || widget.widget_type === 'plaid'}
+							{:else if resolvedType === 'bank-accounts'}
 								<PlaidWidget />
-							{:else if widget.widget_type === 'chart'}
-								<ChartWidget config={cfg as ChartConfig} />
-							{:else if widget.widget_type === 'recent-chats'}
-								<RecentChatsWidget config={cfg as RecentChatsConfig} />
-							{:else if widget.widget_type === 'bookmarks'}
-								<BookmarksWidget config={cfg as BookmarksConfig} />
-							{:else if widget.widget_type === 'knowledge'}
-								<KnowledgeWidget config={cfg as KnowledgeConfig} />
+							{:else if resolvedType === 'chart'}
+								<ChartWidget config={chartCfg} />
+							{:else if resolvedType === 'recent-chats'}
+								<RecentChatsWidget config={recentChatsCfg} />
+							{:else if resolvedType === 'bookmarks'}
+								<BookmarksWidget config={bookmarksCfg} />
+							{:else if resolvedType === 'knowledge'}
+								<KnowledgeWidget config={knowledgeCfg} />
 							{:else}
 								<div class="flex min-h-40 flex-col items-center justify-center gap-2 rounded-[24px] border border-dashed border-[#D7DCE5] bg-[#F8FBFF] p-6 text-center">
 									<p class="text-sm font-medium text-[#25324B]">Unsupported widget</p>
