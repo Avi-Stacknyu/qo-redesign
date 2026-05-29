@@ -3,14 +3,29 @@
 	import { Star } from '@lucide/svelte';
 	import { toggleThreadFavorite, getThreadList } from '$lib/remote/chat-threads.remote';
 
-	let { threadId = null, favorite = false }: { threadId?: string | null; favorite?: boolean } =
-		$props();
+	let {
+		threadId = null,
+		favorite = false,
+		onFavoriteChange
+	}: {
+		threadId?: string | null;
+		favorite?: boolean;
+		onFavoriteChange?: (favorite: boolean) => void;
+	} = $props();
 	let isToggling = $state(false);
+	let favoriteState = $state(false);
+
+	$effect(() => {
+		favoriteState = favorite;
+	});
 
 	async function toggleFavorite() {
 		if (!threadId || isToggling) return;
 		isToggling = true;
-		const newFavorite = !favorite;
+		const previousFavorite = favoriteState;
+		const newFavorite = !previousFavorite;
+		favoriteState = newFavorite;
+		onFavoriteChange?.(newFavorite);
 		try {
 			await toggleThreadFavorite({ thread_id: threadId, favorite: newFavorite }).updates(
 				getThreadList().withOverride((chats) =>
@@ -18,6 +33,8 @@
 				)
 			);
 		} catch {
+			favoriteState = previousFavorite;
+			onFavoriteChange?.(previousFavorite);
 			getThreadList().refresh();
 		} finally {
 			isToggling = false;
@@ -33,9 +50,11 @@
 			class="size-7"
 			onclick={toggleFavorite}
 			disabled={isToggling}
-			title={favorite ? 'Remove from favorites' : 'Add to favorites'}
+			aria-label="Favorite conversation"
+			aria-pressed={favoriteState}
+			title={favoriteState ? 'Remove from favorites' : 'Add to favorites'}
 		>
-			<Star class={favorite ? 'fill-yellow-400 text-yellow-400' : ''} />
+			<Star class={favoriteState ? 'fill-yellow-400 text-yellow-400' : ''} />
 		</Button>
 	{/if}
 </div>

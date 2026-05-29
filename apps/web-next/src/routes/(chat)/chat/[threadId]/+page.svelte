@@ -103,6 +103,7 @@
 
 	let currentAgentId = $state('');
 	let currentModelId = $state<string | null>(null);
+	let threadFavorite = $state(false);
 
 	const currentAgent = $derived(
 		data.agents.find((a: ChatPageAgent) => a.id === currentAgentId) as ChatPageAgent | undefined
@@ -288,8 +289,9 @@
 			initializedThreadId = newThreadId;
 			currentAgentId = data.thread.agentId || data.agents[0]?.id || '';
 			currentModelId = data.thread.modelOverrideId ?? null;
+			threadFavorite = data.thread.favorite;
 			pbIdMap.clear();
-			savedMessageIds = new Set();
+			savedMessageIds = new Set(data.savedMessageIds ?? []);
 			sentHilToolCallIds = new Set();
 			scrollToBottom();
 		}
@@ -298,6 +300,12 @@
 	$effect(() => {
 		const agentId = data.thread.agentId || data.agents[0]?.id || '';
 		if (!untrack(() => currentAgentId)) currentAgentId = agentId;
+	});
+
+	$effect(() => {
+		data.thread.id;
+		threadFavorite = data.thread.favorite;
+		savedMessageIds = new Set(data.savedMessageIds ?? []);
 	});
 
 	$effect(() => {
@@ -397,6 +405,15 @@
 
 	function getPbId(chatMsgId: string): string {
 		return pbIdMap.get(chatMsgId) || chatMsgId;
+	}
+
+	function canSaveMessage(messageId: string) {
+		return !getPbId(messageId).startsWith('temp-');
+	}
+
+	function isMessageSaved(messageId: string) {
+		const pbId = getPbId(messageId);
+		return savedMessageIds.has(messageId) || savedMessageIds.has(pbId);
 	}
 
 	// ── Actions ──────────────────────────────────────────────────────────────
@@ -540,16 +557,19 @@
 		});
 	}
 
-	async function handleSaveAsNote(messageId: string, content: string) {
+	async function handleSaveAsNote(messageId: string, content: string): Promise<boolean> {
 		const pbId = getPbId(messageId);
-		if (savedMessageIds.has(messageId) || pbId.startsWith('temp-')) return;
+		if (savedMessageIds.has(messageId) || savedMessageIds.has(pbId)) return true;
+		if (pbId.startsWith('temp-')) return false;
 		try {
 			await saveMessageAsNote({ messageId: pbId, chatId: threadId, content });
-			savedMessageIds = new Set([...savedMessageIds, messageId]);
+			savedMessageIds = new Set([...savedMessageIds, messageId, pbId]);
 			toast.success('Saved to Knowledge Base');
+			return true;
 		} catch (err) {
 			console.error('Failed to save note:', err);
 			toast.error('Failed to save note');
+			return false;
 		}
 	}
 </script>
@@ -559,6 +579,11 @@
 		class="relative h-full min-h-0 border border-white/70 bg-white/88"
 		title={conversationTitle}
 		status={conversationStatus}
+		threadTitle={data.thread.title}
+		threadId={data.thread.id}
+		favorite={threadFavorite}
+		onFavoriteChange={(favorite) => (threadFavorite = favorite)}
+		showStar={true}
 		showMenu={false}
 	>
 		{#snippet headerIcon()}
@@ -569,12 +594,12 @@
 			{/if}
 		{/snippet}
 
-		{#snippet headerTrailing()}
+		<!-- {#snippet headerTrailing()}
 			<div class="text-right leading-tight">
 				<p class="text-[10px] font-semibold tracking-[0.24em] text-slate-400 uppercase">Thread</p>
 				<p class="max-w-48 truncate text-sm text-slate-500">{data.thread.title ?? 'New Chat'}</p>
 			</div>
-		{/snippet}
+		{/snippet} -->
 
 		{#snippet content()}
 			<div
@@ -616,7 +641,8 @@
 								onSaveAsNote={message.role === 'assistant'
 									? (c) => handleSaveAsNote(message.id, c)
 									: undefined}
-								isSaved={savedMessageIds.has(message.id)}
+								isSaved={isMessageSaved(message.id)}
+								canSaveAsNote={canSaveMessage(message.id)}
 							/>
 						{/each}
 						{#if isThinking || currentToolName}

@@ -73,7 +73,7 @@
 	<p
 		class="mb-3 shrink-0 text-[11px] font-medium tracking-[0.24em] text-muted-foreground/40 uppercase"
 	>
-		Previous Conversations
+		Continue	 Conversations
 	</p>
 	<div class="relative">
 		<ScrollJumpButtons

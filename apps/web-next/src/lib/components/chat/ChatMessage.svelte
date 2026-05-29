@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { format } from 'date-fns';
 	import { marked } from 'marked';
 	import { cn } from '$lib/utils';
 	import { User, Paperclip, Bookmark, BookmarkCheck, Loader2 } from '@lucide/svelte';
@@ -19,7 +20,8 @@
 		onConfirmationRespond,
 		onInputSubmit,
 		onSaveAsNote,
-		isSaved = false
+		isSaved = false,
+		canSaveAsNote = true
 	}: {
 		role: 'user' | 'assistant';
 		content: string;
@@ -29,23 +31,31 @@
 		agent?: { id: string; name: string; avatar_url?: string | null };
 		onConfirmationRespond?: (confirmed: boolean, toolCallId: string) => void;
 		onInputSubmit?: (value: string, toolCallId: string) => void;
-		onSaveAsNote?: (content: string) => void;
+		onSaveAsNote?: (content: string) => Promise<boolean> | boolean;
 		isSaved?: boolean;
+		canSaveAsNote?: boolean;
 	} = $props();
 
 	let isSaving = $state(false);
 	let bubbleEl: HTMLDivElement | undefined = $state();
 	let selectionPopup = $state<{ x: number; y: number; text: string } | null>(null);
 
+	function formatTimestamp(value?: string) {
+		if (!value) return value;
+
+		const date = new Date(value);
+		if (Number.isNaN(date.getTime())) return value;
+
+		return format(date, 'MMM d, h:mm a');
+	}
+
 	async function handleSaveAsNote() {
 		if (isSaving || isSaved || !onSaveAsNote) return;
 		isSaving = true;
 		try {
-			onSaveAsNote(content);
+			await onSaveAsNote(content);
 		} finally {
-			setTimeout(() => {
-				isSaving = false;
-			}, 3000);
+			isSaving = false;
 		}
 	}
 
@@ -53,17 +63,15 @@
 		if (!selectionPopup || !onSaveAsNote || isSaving) return;
 		isSaving = true;
 		try {
-			onSaveAsNote(selectionPopup.text);
+			await onSaveAsNote(selectionPopup.text);
 		} finally {
 			selectionPopup = null;
-			setTimeout(() => {
-				isSaving = false;
-			}, 3000);
+			isSaving = false;
 		}
 	}
 
 	function handleMouseUp() {
-		if (role !== 'user' && onSaveAsNote && !isSaved) {
+		if (role !== 'user' && onSaveAsNote && !isSaved && canSaveAsNote) {
 			const selection = window.getSelection();
 			const selectedText = selection?.toString().trim();
 			if (selectedText && selectedText.length > 10 && bubbleEl) {
@@ -98,6 +106,7 @@
 	marked.setOptions({ breaks: true, gfm: true });
 
 	const renderedContent = $derived(marked(content));
+	const formattedTimestamp = $derived(formatTimestamp(timestamp));
 	const hasGenerativeUIParts = $derived(parts && parts.length > 0);
 	const hasContent = $derived(content && content.trim().length > 0);
 	const partsIncludeText = $derived(parts?.some((p) => p.type === 'text') ?? false);
@@ -181,9 +190,9 @@
 								{@html renderedContent}
 							</div>
 
-							{#if timestamp}
+							{#if formattedTimestamp}
 								<p class={cn('mt-2 text-[10px] font-medium', role === 'user' ? 'text-white/60' : 'text-[#98a2b3]')}>
-									{timestamp}
+									{formattedTimestamp}
 								</p>
 							{/if}
 
@@ -219,6 +228,12 @@
 									class="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-muted-foreground"
 								>
 									<Loader2 class="h-3 w-3 animate-spin" /> Saving...
+								</span>
+							{:else if !canSaveAsNote}
+								<span
+									class="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-muted-foreground"
+								>
+									<Loader2 class="h-3 w-3 animate-spin" /> Preparing...
 								</span>
 							{:else}
 								<button

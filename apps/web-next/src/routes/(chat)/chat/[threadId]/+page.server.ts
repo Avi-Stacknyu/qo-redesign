@@ -5,8 +5,8 @@
 import { error, redirect } from '@sveltejs/kit';
 import { requireFeature } from '$lib/utils/route-guard';
 import { loadChatPageData } from '$lib/server/chat-data';
-import { eq, asc } from 'drizzle-orm';
-import { chats, chatMessages } from '@repo/db/schema';
+import { and, eq, asc } from 'drizzle-orm';
+import { chats, chatMessages, userNotes } from '@repo/db/schema';
 import type { PageServerLoad } from './$types';
 
 /** Lightweight tier context for client-side gating. */
@@ -44,13 +44,17 @@ export const load: PageServerLoad = async ({
 
 		const meta = (chat.meta ?? {}) as ChatMeta;
 
-		const [data, messageRows] = await Promise.all([
+		const [data, messageRows, savedNoteRows] = await Promise.all([
 			loadChatPageData(db, user.id, user.plan, platform, request),
 			db
 				.select()
 				.from(chatMessages)
 				.where(eq(chatMessages.chat, threadId))
-				.orderBy(asc(chatMessages.created))
+				.orderBy(asc(chatMessages.created)),
+			db
+				.select({ sourceMessage: userNotes.sourceMessage })
+				.from(userNotes)
+				.where(and(eq(userNotes.user, user.id), eq(userNotes.chat, threadId)))
 		]);
 
 		const messages = messageRows.map((msg) => ({
@@ -63,6 +67,10 @@ export const load: PageServerLoad = async ({
 				| undefined,
 			parts: (msg.meta as Record<string, unknown>)?.parts as unknown[] | undefined
 		}));
+
+		const savedMessageIds = savedNoteRows
+			.map((row) => row.sourceMessage)
+			.filter((sourceMessage): sourceMessage is string => typeof sourceMessage === 'string');
 
 		return {
 			thread: {
@@ -77,6 +85,7 @@ export const load: PageServerLoad = async ({
 			shelfAgentIds: data.shelfAgentIds,
 			hasShelf: data.hasShelf,
 			messages,
+			savedMessageIds,
 			availableModels: data.availableModels,
 			tierContext: {
 				allowedModelIds: data.tierContext.allowedModelIds,

@@ -122,6 +122,8 @@ export const toggleThreadFavorite = command(
 			.set({ meta, updated: new Date().toISOString() })
 			.where(eq(chats.id, thread_id));
 
+		getThreadList().refresh();
+
 		return { id: thread_id, favorite };
 	}
 );
