@@ -64,11 +64,11 @@
 
 <Dialog.Root bind:open>
 	<Dialog.Content
-		class="max-w-4xl! w-full gap-0 overflow-hidden border-border/40 bg-background/95 p-0 shadow-2xl backdrop-blur-xl sm:rounded-2xl"
+		class="flex max-h-[90dvh] flex-col gap-0 overflow-hidden border-border/40 bg-background/95 p-0 shadow-2xl backdrop-blur-xl sm:rounded-2xl sm:max-w-4xl!"
 	>
 		{#if todoPrompt}
 			<!-- Todo Category Prompt -->
-			<div class="flex flex-col gap-4 p-6">
+			<div class="flex flex-col gap-4 p-4 sm:p-6">
 				<Dialog.Header>
 					<Dialog.Title class="text-xl font-semibold tracking-tight">Name your list</Dialog.Title>
 					<Dialog.Description class="text-muted-foreground">
@@ -99,10 +99,10 @@
 			</div>
 		{:else}
 			<!-- Header with Search -->
-			<div class="flex flex-col gap-4 border-b border-border/40 p-6">
+			<div class="flex shrink-0 flex-col gap-3 border-b border-border/40 p-4 sm:gap-4 sm:p-6">
 				<Dialog.Header>
-					<Dialog.Title class="text-xl font-semibold tracking-tight">Widget Library</Dialog.Title>
-					<Dialog.Description class="text-muted-foreground">
+					<Dialog.Title class="text-lg font-semibold tracking-tight sm:text-xl">Widget Library</Dialog.Title>
+					<Dialog.Description class="hidden text-muted-foreground sm:block">
 						Customize your dashboard with specialized widgets.
 					</Dialog.Description>
 				</Dialog.Header>
@@ -117,8 +117,8 @@
 			</div>
 
 			<!-- Scrollable Grid Area -->
-			<div class="max-h-[60vh] overflow-y-auto bg-muted/5 p-6">
-				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+			<div class="flex-1 overflow-y-auto bg-muted/5 p-3 sm:p-6">
+				<div class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
 					{#each filteredWidgets as widget (widget.id)}
 						<button
 							aria-label={`Add ${widget.name ?? widget.widgetType ?? 'widget'}`}
@@ -127,7 +127,7 @@
 						>
 							<!-- Mini-Window Schematic Preview -->
 							<div
-								class="relative aspect-[16/9] w-full overflow-hidden border-b border-border/30 bg-muted/20"
+								class="relative aspect-video w-full overflow-hidden border-b border-border/30 bg-muted/20"
 							>
 								<!-- Abstract UI Representation based on type -->
 								<div

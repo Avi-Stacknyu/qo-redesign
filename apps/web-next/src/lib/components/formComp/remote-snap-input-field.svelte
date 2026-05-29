@@ -55,6 +55,7 @@
 			max={inputProps?.max}
 			step={inputProps?.step}
 			disabled={isDisabled}
+			class='h-12 bg-white'
 		/>
 	{/if}
 	{#if description}

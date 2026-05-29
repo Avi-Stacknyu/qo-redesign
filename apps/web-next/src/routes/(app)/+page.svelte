@@ -1,9 +1,8 @@
 <script lang="ts">
-	import { Check, LayoutGrid, Loader2, Palette, Plus, Settings2 } from '@lucide/svelte';
+	import { Check, LayoutGrid, Loader2, Plus } from '@lucide/svelte';
 	import type { DashboardWidgetRow } from '@repo/db/types';
 	import type { DataSourceCatalogItem } from '@repo/shared/types';
 	import Shell from '$lib/components/Shell.svelte';
-	import ThemeSelector from '$lib/components/ThemeSelector.svelte';
 	import WidgetCatalog from '$lib/components/dashboard/WidgetCatalog.svelte';
 	import WidgetGrid from '$lib/components/dashboard/WidgetGrid.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
@@ -67,7 +66,6 @@
 	let createDialogOpen = $state(false);
 	let newDashboardName = $state('');
 	let creatingDashboard = $state(false);
-	let themeOpen = $state(false);
 	let autoSeededProfileIds = $state<string[]>([]);
 
 	const QUANT_DASHBOARD_WIDGETS: Array<{
@@ -155,7 +153,7 @@
 	}
 </script>
 
-<Shell pageTitle="Dashboard — Quant Orion" headerVerticalAlign="center">
+<Shell pageTitle="Dashboard — Quant Orion" headerVerticalAlign="center" onSettingsClick={() => dashboard.enterEditMode()}>
 	{#snippet header()}
 		<div class="space-y-1.5">
 			<h2 class="text-xs font-semibold tracking-[0.22em] text-muted-foreground uppercase">
@@ -174,7 +172,7 @@
 	{/snippet}
 
 	{#snippet headerTabs()}
-		<div class="min-w-0 flex-1 rounded-[26px] border border-white/70 bg-white/72 p-1.5 shadow-[0_16px_36px_rgba(15,23,42,0.08)] backdrop-blur-xl">
+		<div class="w-fit max-w-full rounded-[26px] border border-white/70 bg-white/72 p-1.5 shadow-[0_16px_36px_rgba(15,23,42,0.08)] backdrop-blur-xl">
 			<div class="flex min-w-0 items-center gap-1 overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
 				{#each dashboard.profiles as profile (profile.id)}
 					<button
@@ -197,73 +195,40 @@
 					</button>
 				{/each}
 
-				<button
-					type="button"
-					onclick={() => (createDialogOpen = true)}
-					class="inline-flex h-10 shrink-0 items-center gap-2 rounded-[20px] px-4 text-sm font-medium text-[#6B7280] transition-all hover:bg-[#F3F6FB] hover:text-[#1F2937]"
-				>
-					<Plus class="h-4 w-4" />
-					<span>New</span>
-				</button>
 			</div>
 		</div>
 	{/snippet}
 
 	{#snippet headerUtilities()}
-		<div class="flex items-center gap-2">
-			{#if dashboard.editMode}
-				<div class="flex items-center gap-2 rounded-[22px] border border-white/70 bg-white/80 p-1.5 pl-4 text-[#25324B] shadow-[0_16px_36px_rgba(15,23,42,0.08)] backdrop-blur-xl">
-					<span class="text-xs font-semibold tracking-[0.16em] text-[#7B8794] uppercase">Editing</span>
-					<Button
-						variant="ghost"
-						size="sm"
-						onclick={() => (catalogOpen = true)}
-						class="h-9 rounded-full px-4 text-xs font-semibold text-[#25324B] hover:bg-[#F3F6FB]"
-					>
-						<Plus class="mr-1 h-3.5 w-3.5" />
-						Widget
-					</Button>
-					<Button
-						size="sm"
-						onclick={() => dashboard.exitEditMode()}
-						disabled={dashboard.saving}
-						class="h-9 rounded-full bg-[#111A2E] px-4 text-xs font-semibold text-white hover:bg-[#0A1120]"
-					>
-						{#if dashboard.saving}
-							<Loader2 class="mr-1 h-3.5 w-3.5 animate-spin" />
-							Saving
-						{:else}
-							<Check class="mr-1 h-3.5 w-3.5" />
-							Done
-						{/if}
-					</Button>
-				</div>
-			{:else}
+		{#if dashboard.editMode}
+			<div class="flex w-full items-center gap-2 rounded-[22px] border border-white/70 bg-white/80 p-1.5 pl-4 text-[#25324B] shadow-[0_16px_36px_rgba(15,23,42,0.08)] backdrop-blur-xl md:w-auto">
+				<span class="text-xs font-semibold tracking-[0.16em] text-[#7B8794] uppercase">Editing</span>
+				<div class="flex-1 md:hidden"></div>
 				<Button
-					variant="secondary"
-					size="icon-lg"
-					onclick={() => dashboard.enterEditMode()}
-					class="rounded-full border border-white/70 bg-white/82 text-[#6B7280] shadow-[0_12px_28px_rgba(15,23,42,0.08)] hover:bg-[#111A2E] hover:text-white"
-					aria-label="Edit current dashboard"
-					title="Edit current dashboard"
+					variant="ghost"
+					size="sm"
+					onclick={() => (catalogOpen = true)}
+					class="h-9 flex-1 rounded-full px-3 text-xs font-semibold text-[#25324B] hover:bg-[#F3F6FB] md:flex-none md:px-4"
 				>
-					<Settings2 class="h-5 w-5" />
+					<Plus class="mr-1 h-3.5 w-3.5" />
+					Widget
 				</Button>
-				<ThemeSelector bind:open={themeOpen}>
-					{#snippet trigger()}
-						<Button
-							variant="outline"
-							size="icon-lg"
-							class="rounded-full border border-white/70 bg-white/82 text-[#6B7280] shadow-[0_12px_28px_rgba(15,23,42,0.08)] hover:bg-[#F3F6FB] hover:text-[#1F2937]"
-							aria-label="Open theme picker"
-							title="Open theme picker"
-						>
-							<Palette class="h-5 w-5" />
-						</Button>
-					{/snippet}
-				</ThemeSelector>
-			{/if}
-		</div>
+				<Button
+					size="sm"
+					onclick={() => dashboard.exitEditMode()}
+					disabled={dashboard.saving}
+					class="h-9 flex-1 rounded-full bg-[#111A2E]  text-xs font-semibold text-white hover:bg-[#0A1120] md:flex-none md:px-4"
+				>
+					{#if dashboard.saving}
+						<Loader2 class="mr-1 h-3.5 w-3.5 animate-spin" />
+						<span class="hidden md:inline">Saving</span>
+					{:else}
+						<Check class="mr-1 h-3.5 w-3.5" />
+						<span class="hidden md:inline">Done</span>
+					{/if}
+				</Button>
+			</div>
+		{/if}
 	{/snippet}
 
 	<div
