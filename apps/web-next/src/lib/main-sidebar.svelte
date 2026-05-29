@@ -1,31 +1,40 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
+
   import AgentAvatar from '$lib/components/AgentAvatar.svelte';
   import ChatModeSidebar from '$lib/components/chat/sidebar/ChatModeSidebar.svelte';
+
   import * as Avatar from '$lib/components/ui/avatar/index.js';
   import * as Card from '$lib/components/ui/card/index.js';
   import * as Dialog from '$lib/components/ui/dialog/index.js';
   import * as Tooltip from '$lib/components/shadcn/tooltip/index.js';
+  import * as DropdownMenu from '$lib/components/shadcn/dropdown-menu/index.js';
+
   import { Button } from '$lib/components/ui/button/index.js';
   import { Input } from '$lib/components/ui/input/index.js';
-  import * as DropdownMenu from '$lib/components/shadcn/dropdown-menu/index.js';
-  import { CreditCard, LogOut } from '@lucide/svelte';
+
+  import {
+    BarChart3,
+    Bot,
+    CheckSquare,
+    CreditCard,
+    FileSpreadsheet,
+    FlaskConical,
+    LayoutGrid,
+    Loader2,
+    LogOut,
+    PanelLeft,
+    Plus,
+    Settings
+  } from '@lucide/svelte';
+
   import type { Agent } from '$lib/remote/agents.remote';
   import { dashboard } from '$lib/state/dashboard.svelte';
 
   import { cn } from '$lib/utils';
 
-  import {
-    Bot,
-    FileSpreadsheet,
-    FlaskConical,
-    LayoutGrid,
-    Loader2,
-    PanelLeft,
-    Plus,
-    Settings
-  } from '@lucide/svelte';
+  let mobileMenuOpen = $state(false);
 
   type SidebarUser = {
     name?: string | null;
@@ -69,6 +78,52 @@
     ].filter((item) => item.show)
   );
 
+  const mobileNavItems = $derived(
+    [
+      {
+        key: 'dashboard',
+        label: 'Dashboard',
+        icon: LayoutGrid,
+        path: '/',
+        type: 'link',
+        show: true
+      },
+      {
+        key: 'knowledge',
+        label: 'Knowledge',
+        icon: FileSpreadsheet,
+        path: '/knowledge',
+        type: 'link',
+        show: showFeature('page:knowledge')
+      },
+      {
+        key: 'create',
+        label: 'Create',
+        icon: Plus,
+        type: 'action',
+        center: true,
+        action: () => (createDialogOpen = true),
+        show: true
+      },
+      {
+        key: 'tools',
+        label: 'Tools',
+        icon: FlaskConical,
+        path: '/tools',
+        type: 'link',
+        show: showFeature('page:tools')
+      },
+      {
+        key: 'preferences',
+        label: 'Prefs',
+        icon: Settings,
+        path: '/preferences/general',
+        type: 'link',
+        show: true
+      }
+    ].filter((item) => item.show)
+  );
+
   const selectedAgents = $derived(agents.filter((agent) => agent.status === 'active').slice(0, 5));
 
   const userInitials = $derived(
@@ -86,8 +141,11 @@
 
   async function createDashboard() {
     const name = newDashboardName.trim();
+
     if (!name || creatingDashboard) return;
+
     creatingDashboard = true;
+
     try {
       await dashboard.createProfile({
         name,
@@ -96,6 +154,7 @@
         profileColor: 'var(--primary)',
         sourceProfileId: dashboard.activeProfileId ?? undefined
       });
+
       newDashboardName = '';
       createDialogOpen = false;
     } finally {
@@ -111,6 +170,7 @@
 
   function navigate(path: string) {
     visible = true;
+    mobileMenuOpen = false;
     goto(path);
   }
 
@@ -123,10 +183,52 @@
   {#if mode === 'chat'}
     <ChatModeSidebar bind:visible />
   {:else}
+    <!-- Mobile Bottom Navigation -->
+    <nav
+      class="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center justify-between gap-1 rounded-full border border-white/90 bg-white/85 px-3 py-2.5 shadow-[0_8px_32px_rgba(80,40,160,0.18),0_2px_8px_rgba(0,0,0,0.06)] backdrop-blur-xl md:hidden"
+      style="width: calc(100% - 2rem); max-width: 400px;"
+    >
+      {#each mobileNavItems as item (item.key)}
+        {#if item.center}
+          <!-- Floating Center Button -->
+          <div class="relative mx-1 flex shrink-0 items-center justify-center">
+            <div class="h-11 w-14"></div>
+
+            <button
+              type="button"
+              onclick={item.action}
+              class="absolute top-1/2 flex h-14 w-14 -translate-y-full shrink-0 items-center justify-center rounded-full bg-[#904EFF] text-white shadow-lg shadow-violet-500/40 transition-all hover:bg-[#7B3FE4] hover:shadow-xl active:scale-95"
+              aria-label={item.label}
+            >
+              <item.icon class="h-6 w-6" />
+            </button>
+          </div>
+        {:else}
+          <button
+            type="button"
+            onclick={() => item.path && navigate(item.path)}
+            class={cn(
+              'flex flex-1 flex-col items-center gap-0.5 rounded-full px-2 py-1.5 transition-all',
+              item.path && isActive(item.path)
+                ? 'text-[#904EFF]'
+                : 'text-slate-400 hover:text-slate-600'
+            )}
+          >
+            <item.icon class="h-5 w-5" />
+
+            <span class="text-[9px] font-Inter font-medium">
+              {item.label}
+            </span>
+          </button>
+        {/if}
+      {/each}
+    </nav>
+
+    <!-- Desktop Sidebar -->
     <main
       class={cn(
-        'fixed top-[12.5%] left-4 z-30 flex w-fit flex-col gap-20 transition-all duration-300',
-        visible ? 'translate-x-0 opacity-100' : '-translate-x-24 opacity-0 pointer-events-none'
+        'fixed top-[12.5%] left-4 z-30 hidden w-fit flex-col gap-20 transition-all duration-300 md:flex',
+        visible ? 'translate-x-0 opacity-100' : '-translate-x-24 pointer-events-none opacity-0'
       )}
       aria-hidden={!visible}
     >
@@ -154,7 +256,10 @@
                   </button>
                 {/snippet}
               </Tooltip.Trigger>
-              <Tooltip.Content side="right">{item.label}</Tooltip.Content>
+
+              <Tooltip.Content side="right">
+                {item.label}
+              </Tooltip.Content>
             </Tooltip.Root>
           {/each}
 
@@ -173,6 +278,7 @@
                 </button>
               {/snippet}
             </Tooltip.Trigger>
+
             <Tooltip.Content side="right">New dashboard</Tooltip.Content>
           </Tooltip.Root>
         </Card.Content>
@@ -202,7 +308,10 @@
                     </a>
                   {/snippet}
                 </Tooltip.Trigger>
-                <Tooltip.Content side="right">{agent.name}</Tooltip.Content>
+
+                <Tooltip.Content side="right">
+                  {agent.name}
+                </Tooltip.Content>
               </Tooltip.Root>
             {/each}
           </Card.Content>
@@ -224,16 +333,19 @@
                   </a>
                 {/snippet}
               </Tooltip.Trigger>
+
               <Tooltip.Content side="right">Chat</Tooltip.Content>
             </Tooltip.Root>
           </Card.Content>
         </Card.Root>
       {/if}
+
+      <!-- Bottom Controls -->
       <Card.Root
         class="w-fit rounded-full border-white/80 bg-white/85 p-2 shadow-sm backdrop-blur-xl"
       >
         <Card.Content class="flex flex-col gap-3 p-1">
-          <!-- Settings -->
+          <!-- Preferences -->
           <Tooltip.Root delayDuration={150}>
             <Tooltip.Trigger>
               {#snippet child({ props })}
@@ -288,12 +400,12 @@
                 >
                   <Avatar.Root class="h-10 w-10">
                     {#if user?.avatar}
-                      <Avatar.Image
-                        src={user.avatar}
-                        alt={user.name ?? user.email ?? 'User'}
-                      />
+                      <Avatar.Image src={user.avatar} alt={user.name ?? user.email ?? 'User'} />
                     {/if}
-                    <Avatar.Fallback>{userInitials}</Avatar.Fallback>
+
+                    <Avatar.Fallback>
+                      {userInitials}
+                    </Avatar.Fallback>
                   </Avatar.Root>
                 </button>
               {/snippet}
@@ -304,21 +416,32 @@
               side="right"
               align="end"
               sideOffset={18}
-              avoidCollisions={true}              portalProps={{ to: 'body' }}            >
+              avoidCollisions={true}
+              portalProps={{ to: 'body' }}
+            >
               <DropdownMenu.Label class="p-0 font-normal">
                 <div class="flex items-center gap-3 px-3 py-3">
                   <Avatar.Root class="h-9 w-9">
                     {#if user?.avatar}
                       <Avatar.Image src={user.avatar} alt={user.name ?? user.email ?? 'User'} />
                     {/if}
-                    <Avatar.Fallback>{userInitials}</Avatar.Fallback>
+
+                    <Avatar.Fallback>
+                      {userInitials}
+                    </Avatar.Fallback>
                   </Avatar.Root>
+
                   <div class="grid flex-1 text-start leading-tight">
                     {#if user?.name}
-                      <span class="truncate text-sm font-medium text-slate-800">{user.name}</span>
+                      <span class="truncate text-sm font-medium text-slate-800">
+                        {user.name}
+                      </span>
                     {/if}
+
                     {#if user?.email}
-                      <span class="truncate text-xs text-slate-400">{user.email}</span>
+                      <span class="truncate text-xs text-slate-400">
+                        {user.email}
+                      </span>
                     {/if}
                   </div>
                 </div>
@@ -351,6 +474,7 @@
   {/if}
 </Tooltip.Provider>
 
+<!-- Create Dashboard Dialog -->
 <Dialog.Root bind:open={createDialogOpen}>
   <Dialog.Content
     class="overflow-hidden rounded-[30px] border-white/70 bg-white/95 p-0 shadow-[0_32px_80px_rgba(15,23,42,0.18)] sm:max-w-lg"
@@ -359,9 +483,10 @@
       class="border-b border-[#E7EDF7] bg-linear-to-br from-[#F8FBFF] via-white to-[#F4F0FF] p-6 pr-14"
     >
       <Dialog.Header>
-        <Dialog.Title class="text-xl font-semibold tracking-tight text-[#25324B]"
-          >Create dashboard</Dialog.Title
-        >
+        <Dialog.Title class="text-xl font-semibold tracking-tight text-[#25324B]">
+          Create dashboard
+        </Dialog.Title>
+
         <Dialog.Description class="text-sm leading-6 text-[#7B8794]">
           Start from your current layout, then customize widgets, colors, and data sources for that
           workspace.
@@ -372,18 +497,21 @@
     <div class="grid gap-5 p-6">
       <div class="rounded-[24px] border border-[#E7EDF7] bg-[#F8FBFF] p-4">
         <p class="text-xs font-semibold tracking-[0.2em] text-[#98A2B3] uppercase">Source layout</p>
+
         <p class="mt-2 text-sm font-medium text-[#25324B]">
           {dashboard.activeProfile?.profile_name ?? 'Current dashboard'}
         </p>
+
         <p class="mt-1 text-xs text-[#7B8794]">
           Widgets, order, and card configuration will be duplicated into the new dashboard.
         </p>
       </div>
 
       <div class="space-y-2">
-        <label for="sidebar-dashboard-name" class="text-sm font-medium text-[#25324B]"
-          >Dashboard name</label
-        >
+        <label for="sidebar-dashboard-name" class="text-sm font-medium text-[#25324B]">
+          Dashboard name
+        </label>
+
         <Input
           id="sidebar-dashboard-name"
           bind:value={newDashboardName}
@@ -401,6 +529,7 @@
       >
         Cancel
       </Button>
+
       <Button
         class="rounded-full bg-[#111A2E] text-white hover:bg-[#0A1120]"
         onclick={createDashboard}
@@ -409,6 +538,7 @@
         {#if creatingDashboard}
           <Loader2 class="mr-2 h-4 w-4 animate-spin" />
         {/if}
+
         Create dashboard
       </Button>
     </Dialog.Footer>

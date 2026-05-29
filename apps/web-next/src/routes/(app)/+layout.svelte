@@ -26,8 +26,8 @@
     sidebarVisible: true
   });
 
-  const expandedContentPadding = 'pl-24 sm:pl-28 lg:pl-32';
-  const collapsedContentPadding = 'pl-20 sm:pl-24 lg:pl-28';
+  const expandedContentPadding = 'pl-4 md:pl-24 md:sm:pl-28 lg:pl-32';
+  const collapsedContentPadding = 'pl-4 md:pl-20 md:sm:pl-24 lg:pl-28';
 
   setContext('app-layout', appLayoutState);
 </script>
@@ -51,10 +51,11 @@
   ></div>
 </div>
 
-<main class="relative min-h-screen bg-transparent px-4 text-foreground">
+<main class="relative min-h-screen bg-transparent px-0 md:px-4 text-foreground">
+  <!-- Desktop Avatar/Toggle Button - Hidden on mobile -->
   <button
     type="button"
-    class="group fixed top-3 left-5 z-40 h-fit w-fit rounded-full p-3 shadow-md transition-shadow hover:shadow-lg"
+    class="group fixed top-3 left-5 z-40 hidden h-fit w-fit rounded-full p-3 shadow-md transition-shadow hover:shadow-lg md:block"
     onclick={() => {
       appLayoutState.sidebarVisible = !appLayoutState.sidebarVisible;
     }}
@@ -88,7 +89,7 @@
 
   <div
     class={cn(
-      'flex flex-1 flex-col gap-4 p-4 transition-[padding-left] duration-300 sm:p-6',
+      'flex flex-1 flex-col gap-4 p-4 pb-24 transition-[padding-left] duration-300 sm:p-6 md:pb-6',
       appLayoutState.sidebarVisible ? expandedContentPadding : collapsedContentPadding
     )}
   >

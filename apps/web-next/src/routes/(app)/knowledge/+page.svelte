@@ -50,6 +50,7 @@
   let selectedNoteId = $state<string | null>(page.url.searchParams.get('note'));
   let copied = $state(false);
   let editing = $state(false);
+  let mobileShowNote = $state(false);
   let title = $state('');
   let category = $state('');
   let tags = $state<string[]>([]);
@@ -188,6 +189,12 @@
   function selectNote(note: Note) {
     editing = false;
     selectedNoteId = note.id;
+    mobileShowNote = true;
+  }
+
+  function mobileBackToList() {
+    mobileShowNote = false;
+    editing = false;
   }
 
   function moveSelection(direction: -1 | 1) {
@@ -396,51 +403,51 @@
   <title>Knowledge</title>
 </svelte:head>
 
-<div class="flex w-full flex-col gap-4 xl:flex-row">
-  <section class="w-full xl:max-w-[430px]">
+<div class="flex w-full flex-col gap-4 px-0 md:px-4 xl:flex-row">
+  <section class={mobileShowNote ? 'hidden xl:block w-full xl:max-w-108' : 'w-full xl:max-w-108'}>
     <Card
-      class="flex max-h-[calc(100vh-4rem)] w-full flex-col overflow-hidden border-0 bg-white p-4 shadow-[0_8px_30px_rgba(0,0,0,0.04)] ring-0 backdrop-blur-xl"
+      class="flex h-[calc(100vh-8rem)] md:max-h-[calc(100vh-4rem)] w-full flex-col overflow-hidden border-0 bg-white p-3 md:p-4 shadow-[0_8px_30px_rgba(0,0,0,0.04)] ring-0 backdrop-blur-xl rounded-2xl md:rounded-3xl"
     >
-      <CardContent class="flex min-h-0 flex-1 flex-col gap-5 p-1">
-        <div class="flex flex-col gap-4">
-          <div class="flex items-center justify-between gap-3">
+      <CardContent class="flex min-h-0 flex-1 flex-col gap-4 md:gap-5 p-0 md:p-1">
+        <div class="flex flex-col gap-3 md:gap-4">
+          <div class="flex items-center justify-between gap-2 md:gap-3">
             <div>
-              <h1 class="text-2xl font-bold tracking-tight text-[#1F1F1F]">Recent Notes</h1>
-              <p class="text-sm text-muted-foreground">{filtered.length} visible</p>
+              <h1 class="text-xl md:text-2xl font-bold tracking-tight text-[#1F1F1F]">Recent Notes</h1>
+              <p class="text-xs md:text-sm text-muted-foreground">{filtered.length} visible</p>
             </div>
 
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-1.5 md:gap-2">
               <Button
                 variant="outline"
-                class="rounded-full border-muted bg-white px-4 py-4 text-base font-medium text-muted-foreground shadow-2xs hover:bg-gray-200"
+                class="rounded-full border-muted bg-white px-3 md:px-4 py-3 md:py-4 text-sm md:text-base font-medium text-muted-foreground shadow-2xs hover:bg-gray-200"
                 onclick={() => (filtersOpen = !filtersOpen)}
               >
                 Filter
-                <ListFilter class="ml-2 h-4 w-4" />
+                <ListFilter class="ml-1.5 md:ml-2 h-4 w-4" />
               </Button>
 
               <Button
                 variant="secondary"
                 size="icon"
-                class="rounded-full bg-white shadow-sm"
+                class="rounded-full bg-white shadow-sm h-9 w-9 md:h-10 md:w-10"
                 onclick={handleCreate}
                 disabled={creating}
                 aria-label="New note"
               >
-                <Plus class="size-5" />
+                <Plus class="size-4 md:size-5" />
               </Button>
             </div>
           </div>
 
           <div class="relative w-full">
             <Search
-              class="absolute top-1/2 left-5 -translate-y-1/2 text-muted-foreground"
-              size={22}
+              class="absolute top-1/2 left-4 md:left-5 -translate-y-1/2 text-muted-foreground"
+              size={20}
             />
             <Input
               type="text"
               placeholder="Search"
-              class="h-10 rounded-full border-0 bg-muted pr-10 pl-14 text-lg text-muted-foreground shadow-none placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
+              class="h-9 md:h-10 rounded-full border-0 bg-muted pr-10 pl-11 md:pl-14 text-base md:text-lg text-muted-foreground shadow-none placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
               bind:value={search}
             />
             {#if search}
@@ -534,15 +541,25 @@
     </Card>
   </section>
 
-  <section class="min-w-0 flex-1">
+  <section class={mobileShowNote ? 'min-w-0 flex-1' : 'hidden xl:block min-w-0 flex-1'}>
     {#if selectedNote}
       <Card
-        class="flex min-h-[calc(100vh-4rem)] w-full flex-col gap-6 border-0 bg-white px-5 py-4 shadow-[0_8px_30px_rgba(0,0,0,0.04)] ring-0 backdrop-blur-xl"
+        class="flex h-[calc(100vh-8rem)] md:min-h-[calc(100vh-4rem)] w-full flex-col gap-4 md:gap-6 border-0 bg-white px-3 md:px-5 py-3 md:py-4 shadow-[0_8px_30px_rgba(0,0,0,0.04)] ring-0 backdrop-blur-xl rounded-2xl md:rounded-3xl overflow-y-auto"
       >
         {#if editing}
           <div class="flex items-start justify-between gap-4">
             <div class="flex items-center gap-4">
-              <div class="flex items-center gap-4 text-[#83899F]">
+              <!-- Mobile back button -->
+              <Button
+                variant="ghost"
+                size="icon"
+                class="rounded-full xl:hidden"
+                onclick={mobileBackToList}
+                aria-label="Back to notes"
+              >
+                <ChevronLeft size={34} />
+              </Button>
+              <div class="hidden items-center gap-4 text-[#83899F] xl:flex">
                 <Button
                   variant="ghost"
                   size="icon"
@@ -617,7 +634,7 @@
             onkeydown={handleTitleKeydown}
             placeholder="Untitled"
             rows="1"
-            class="field-sizing-content w-full resize-none border-none bg-transparent font-Inter text-4xl font-bold text-[#83899F] placeholder:text-muted-foreground/40 focus:outline-none"
+            class="field-sizing-content w-full resize-none border-none bg-transparent font-Inter text-2xl md:text-4xl font-bold text-[#83899F] placeholder:text-muted-foreground/40 focus:outline-none"
           ></textarea>
 
           <div class="flex flex-wrap items-center gap-2 text-xs text-muted-foreground/70">
@@ -727,7 +744,17 @@
         {:else}
           <section class="flex w-full flex-wrap items-center justify-between gap-4">
             <div class="flex items-center gap-4">
-              <div class="flex items-center gap-4 text-[#83899F]">
+              <!-- Mobile back button -->
+              <Button
+                variant="ghost"
+                size="icon"
+                class="rounded-full xl:hidden"
+                onclick={mobileBackToList}
+                aria-label="Back to notes"
+              >
+                <ChevronLeft size={34} />
+              </Button>
+              <div class="hidden items-center gap-4 text-[#83899F] xl:flex">
                 <Button
                   variant="ghost"
                   size="icon"
@@ -777,22 +804,22 @@
 
           <!-- <img src="/images/rainbow.png" alt="Knowledge cover" class="max-h-60 w-full rounded-2xl object-cover" /> -->
 
-          <section class="flex flex-col gap-5">
-            <h2 class="font-Inter text-4xl font-bold text-[#83899F]">
+          <section class="flex flex-col gap-3 md:gap-5">
+            <h2 class="font-Inter text-2xl md:text-4xl font-bold text-[#83899F]">
               {noteTitle(selectedNote)}
             </h2>
-            <p class="font-Inter whitespace-pre-line text-lg font-normal text-[#83899F]">
+            <p class="font-Inter whitespace-pre-line text-base md:text-lg font-normal text-[#83899F]">
               {noteBody(selectedNote)}
             </p>
           </section>
 
-          <section class="flex flex-col gap-4">
-            <h3 class="font-Inter text-2xl font-semibold text-[#83899F]">Tags and Source</h3>
-            <div class="flex flex-wrap gap-3">
+          <section class="flex flex-col gap-3 md:gap-4">
+            <h3 class="font-Inter text-xl md:text-2xl font-semibold text-[#83899F]">Tags and Source</h3>
+            <div class="flex flex-wrap gap-2 md:gap-3">
               {#each noteTags(selectedNote) as tag (tag)}
                 <Button
                   variant="secondary"
-                  class="inline-flex h-10 items-center justify-center rounded-full border border-dashed border-muted bg-white px-4 text-sm font-medium text-muted-foreground shadow-none transition-colors hover:bg-muted/40"
+                  class="inline-flex h-8 md:h-10 items-center justify-center rounded-full border border-dashed border-muted bg-white px-3 md:px-4 text-xs md:text-sm font-medium text-muted-foreground shadow-none transition-colors hover:bg-muted/40"
                 >
                   {tag}
                 </Button>
@@ -800,7 +827,7 @@
             </div>
           </section>
 
-          <CardHeader class="mt-auto px-0 pt-4">
+          <CardHeader class="mt-auto hidden md:block px-0 pt-4">
             <CardTitle class="font-Inter text-base font-normal text-[#83899F]">
               Click the ellipsis to edit this note inline without leaving the knowledge page.
             </CardTitle>
@@ -809,7 +836,7 @@
       </Card>
     {:else}
       <Card
-        class="flex min-h-[calc(100vh-4rem)] items-center justify-center border-0 bg-white p-10 text-center shadow-[0_8px_30px_rgba(0,0,0,0.04)] ring-0"
+        class="flex h-[calc(100vh-8rem)] md:min-h-[calc(100vh-4rem)] items-center justify-center border-0 bg-white p-6 md:p-10 text-center shadow-[0_8px_30px_rgba(0,0,0,0.04)] ring-0 rounded-2xl md:rounded-3xl"
       >
         <CardContent class="max-w-sm space-y-4">
           <BookOpen class="mx-auto size-10 text-muted-foreground/40" />
